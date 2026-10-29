@@ -1,0 +1,23 @@
+{
+  "prayer_zone": "",
+  "azan": true,
+  "auto_hidup": true,
+  "peringatan_minit": 5,
+  "reduced_motion": true,
+  "ambient_glow": false,
+  "dock_apps": ["com.netflix.ninja", "com.google.android.youtube.tv", "com.tm.unifitv.tv", "my.gov.rtm.tv"],
+  "wallpaper_minutes": 1,
+  "zikir": true,
+  "jam_mula": 0,
+  "jam_akhir": 23,
+  "jarak_solat_minit": 10,
+  "surah": [
+    { "jam": 4, "nama": "al-Waqiah", "fail": ["waqiah.mp3"] },
+    { "jam": 5, "nama": "Yasin", "fail": ["yasin.mp3"] },
+    { "jam": 8, "hari": "jumaat", "nama": "ad-Dhuha, al-Insyirah, al-Kahfi", "zikir_dulu": true,
+      "fail": ["dhuha.mp3", "alinsyirah.mp3", "alkahfi.mp3"] },
+    { "jam": 8, "nama": "ad-Dhuha, al-Insyirah", "zikir_dulu": true, "fail": ["dhuha.mp3", "alinsyirah.mp3"] },
+    { "jam": 12, "hari": "jumaat", "nama": "al-Jumu'ah", "fail": ["jumuah.mp3"] },
+    { "jam": 22, "nama": "al-Mulk", "fail": ["almulk.mp3"] }
+  ]
+}

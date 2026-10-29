@@ -1,0 +1,27 @@
+# Build output and local SDK path
+.gradle/
+build/
+app/build/
+local.properties
+
+# Signing key and its passwords never go to GitHub
+keystore.properties
+*.jks
+*.keystore
+
+# Python client for the TV
+tools/venv/
+tools/adbkey/
+__pycache__/
+
+# This TV's backup and change log (serial numbers, Wi-Fi names) stay on this computer
+backup/
+
+# Audio that is not ours to publish: the azan (tools/pasang.py azan fetches it) and your surah MP3s
+media/azan.mp3
+media/azan-subuh.mp3
+media/surah/
+media/contoh-suara/
+
+# Your own pictures and recordings, if you keep them beside the repo
+tetapan/

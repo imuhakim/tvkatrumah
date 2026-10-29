@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TV Kat Rumah</title>
+<style>
+  :root { --bg:#061813; --card:#0d2a22; --line:#1d4a3c; --gold:#e9cb7e; --text:#f4eedc; --dim:#a9b8b0; --red:#e58b7a; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  header { padding:20px 16px 8px; }
+  h1 { margin:0; font-size:22px; color:var(--gold); font-weight:600; }
+  h2 { margin:0 0 10px; font-size:17px; color:var(--gold); font-weight:600; }
+  main { padding:8px 16px 40px; max-width:720px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin:12px 0; }
+  .dim { color:var(--dim); font-size:14px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .row + .row { margin-top:10px; }
+  button, .btn { background:var(--gold); color:#14130c; border:0; border-radius:10px; padding:10px 14px; font:inherit; font-weight:600; cursor:pointer; }
+  button.ghost { background:transparent; color:var(--gold); border:1px solid var(--gold); }
+  button.danger { background:transparent; color:var(--red); border:1px solid var(--red); padding:6px 10px; }
+  button:disabled { opacity:.5; }
+  input, select { background:#0a211b; color:var(--text); border:1px solid var(--line); border-radius:8px; padding:9px 10px; font:inherit; }
+  input[type=checkbox] { width:22px; height:22px; accent-color:var(--gold); }
+  label.sw { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); }
+  label.sw:last-of-type { border-bottom:0; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+  .grid figure { margin:0; position:relative; }
+  .grid img { width:100%; aspect-ratio:16/9; object-fit:cover; border-radius:8px; display:block; }
+  .grid button { position:absolute; top:6px; right:6px; padding:4px 8px; font-size:13px; background:#000a; }
+  .item { display:flex; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .item:last-child { border-bottom:0; }
+  .item .grow { flex:1; min-width:140px; }
+  audio { height:34px; max-width:100%; }
+  .pin { font-size:32px; letter-spacing:.3em; width:7em; text-align:center; }
+  #toast { position:fixed; left:50%; bottom:20px; transform:translateX(-50%); background:var(--gold); color:#14130c; padding:10px 16px; border-radius:10px; font-weight:600; display:none; max-width:90%; }
+  .chip { display:inline-flex; gap:4px; align-items:center; background:#0a211b; border:1px solid var(--line); border-radius:999px; padding:3px 4px 3px 10px; margin:2px; font-size:14px; }
+  .chip button { padding:0 8px; background:transparent; color:var(--red); border:0; }
+  .surah { border:1px solid var(--line); border-radius:10px; padding:10px; margin:8px 0; }
+  progress { width:100%; }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<header><h1>TV Kat Rumah</h1><div class="dim" id="sub">Tetapan dari telefon</div></header>
+<main>
+
+<section id="login" class="card" hidden>
+  <h2>Masuk</h2>
+  <p class="dim">Tekan butang di bawah, kemudian lihat skrin TV: PIN 4 digit keluar di penjuru kanan atas selama 2 minit.</p>
+  <div class="row"><button id="mintaPin">Tunjuk PIN di TV</button></div>
+  <div class="row"><input id="pin" class="pin" inputmode="numeric" maxlength="4" placeholder="0000"><button id="masuk">Masuk</button></div>
+  <p class="dim" id="loginMsg"></p>
+</section>
+
+<div id="app" hidden>
+
+<section class="card">
+  <h2>Sekarang</h2>
+  <div id="status" class="dim">Memuat…</div>
+  <div class="row" style="margin-top:12px">
+    <button class="ghost" data-uji="zikir">Uji zikir</button>
+    <button class="ghost" data-uji="azan">Uji azan</button>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Tetapan</h2>
+  <label class="sw">Zikir setiap jam <input type="checkbox" id="t_zikir"></label>
+  <label class="sw">Azan pada waktu solat <input type="checkbox" id="t_azan"></label>
+  <label class="sw">TV hidup sendiri, tidur semula jika tiada orang <input type="checkbox" id="t_auto"></label>
+  <div class="row" style="margin-top:8px">Zikir dari jam <select id="t_mula"></select> hingga <select id="t_akhir"></select></div>
+  <div class="row">Zon solat JAKIM <input id="t_zon" size="7" placeholder="WLY01"></div>
+  <div class="row">Gambar Home bertukar setiap <input id="t_minit" type="number" min="0" max="1440" style="width:5em"> minit</div>
+  <div class="row">Peringatan <input id="t_ingat" type="number" min="0" max="30" style="width:4em"> minit sebelum azan (0 = tiada)</div>
+  <div class="row" style="margin-top:12px"><button id="simpanTetapan">Simpan tetapan</button></div>
+</section>
+
+<section class="card">
+  <h2>Jadual surah</h2>
+  <p class="dim">Pada jam itu surah menggantikan zikir. "Zikir dahulu" memainkan zikir jam itu sebelum surah. Hari Jumaat diletak di atas supaya ia didahulukan.</p>
+  <div id="jadual"></div>
+  <div class="row"><button class="ghost" id="tambahSurah">+ Tambah surah</button><button id="simpanJadual">Simpan jadual</button></div>
+</section>
+
+<section class="card">
+  <h2>Fail surah (MP3)</h2>
+  <div id="surahFail"></div>
+  <div class="row" style="margin-top:10px"><button class="ghost" data-pilih="surah">+ Muat naik MP3 surah</button></div>
+</section>
+
+<section class="card">
+  <h2>Skrin azan</h2>
+  <div class="grid"><figure id="azanGambar"></figure></div>
+  <div class="row" style="margin-top:10px"><button class="ghost" data-pilih="azan-gambar">Tukar gambar azan</button></div>
+  <div class="grid" style="margin-top:10px"><figure id="ingatGambar"></figure></div>
+  <div class="row" style="margin-top:10px"><button class="ghost" data-pilih="peringatan-gambar">Tukar gambar peringatan</button></div>
+  <div id="azanBunyi" style="margin-top:10px"></div>
+  <div class="row"><button class="ghost" data-pilih="azan-bunyi" data-nama="azan.mp3">Tukar bunyi azan</button>
+    <button class="ghost" data-pilih="azan-bunyi" data-nama="azan-subuh.mp3">Tukar azan Subuh</button></div>
+</section>
+
+<section class="card">
+  <h2>Gambar latar Home &amp; screensaver</h2>
+  <div class="grid" id="masjid"></div>
+  <div class="row" style="margin-top:10px"><button class="ghost" data-pilih="masjid">+ Tambah gambar</button></div>
+</section>
+
+<section class="card">
+  <h2>Suara zikir</h2>
+  <p class="dim">Satu rakaman untuk setiap zikir, 10 hingga 15 saat. Rakaman sendiri menggantikan yang ada.</p>
+  <div id="zikir"></div>
+</section>
+
+<p class="dim" id="alamat"></p>
+</div>
+</main>
+<input type="file" id="file" hidden>
+<div id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const HARI = [["","Setiap hari"],["jumaat","Jumaat"],["sabtu","Sabtu"],["ahad","Ahad"],["isnin","Isnin"],["selasa","Selasa"],["rabu","Rabu"],["khamis","Khamis"]];
+let S = null, surah = [];
+
+function toast(t, ms = 2500) { const e = $("#toast"); e.textContent = t; e.style.display = "block"; clearTimeout(e._t); e._t = setTimeout(() => e.style.display = "none", ms); }
+async function api(path, opts = {}) {
+  const r = await fetch(path, opts);
+  let j = {}; try { j = await r.json(); } catch (e) {}
+  if (r.status === 401) { showLogin(); throw new Error("login"); }
+  if (!j.ok) throw new Error(j.ralat || "Gagal");
+  return j;
+}
+function showLogin() { $("#app").hidden = true; $("#login").hidden = false; }
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function url(jenis, nama) { return "/api/fail?jenis=" + jenis + "&nama=" + encodeURIComponent(nama) + "&t=" + Date.now(); }
+
+$("#mintaPin").onclick = async () => {
+  try { await fetch("/api/pin", {method:"POST"}); $("#loginMsg").textContent = "Lihat skrin TV untuk PIN."; $("#pin").focus(); }
+  catch (e) { $("#loginMsg").textContent = "TV tidak dapat dihubungi. Pastikan telefon guna Wi-Fi rumah."; }
+};
+$("#masuk").onclick = async () => {
+  const r = await fetch("/api/masuk", {method:"POST", headers:{"Content-Type":"application/x-www-form-urlencoded"}, body:"pin=" + encodeURIComponent($("#pin").value)});
+  const j = await r.json().catch(() => ({}));
+  if (j.ok) { $("#login").hidden = true; load(); } else $("#loginMsg").textContent = j.ralat || "PIN salah.";
+};
+
+async function load() {
+  try { S = await api("/api/status"); } catch (e) { return; }
+  $("#app").hidden = false; $("#login").hidden = true;
+  const t = S.tetapan;
+  let st = "";
+  if (S.azan_seterusnya) st += "Azan seterusnya: <b>" + esc(S.azan_seterusnya) + "</b><br>";
+  st += "Zikir seterusnya: <b>" + esc(S.zikir_seterusnya) + "</b>";
+  if (S.solat) st += "<br>" + Object.entries(S.solat).map(([k, v]) => esc(k) + " " + esc(v)).join(" · ") + (S.hijri ? "<br>" + esc(S.hijri) : "");
+  $("#status").innerHTML = st;
+  $("#t_zikir").checked = t.zikir !== false; $("#t_azan").checked = t.azan !== false; $("#t_auto").checked = !!t.auto_hidup;
+  for (const id of ["#t_mula", "#t_akhir"]) $(id).innerHTML = [...Array(24).keys()].map(h => `<option value="${h}">${String(h).padStart(2,"0")}:00</option>`).join("");
+  $("#t_mula").value = t.jam_mula ?? 0; $("#t_akhir").value = t.jam_akhir ?? 23;
+  $("#t_zon").value = t.prayer_zone || ""; $("#t_minit").value = t.wallpaper_minutes ?? 30; $("#t_ingat").value = t.peringatan_minit ?? 5;
+  surah = JSON.parse(JSON.stringify(t.surah || []));
+  drawJadual(); drawFiles();
+  $("#alamat").textContent = "Halaman ini: " + S.alamat;
+}
+
+function drawJadual() {
+  const files = S.fail.surah;
+  $("#jadual").innerHTML = surah.map((s, i) => `
+    <div class="surah">
+      <div class="row"><select data-i="${i}" data-k="jam">${[...Array(24).keys()].map(h => `<option value="${h}" ${h == s.jam ? "selected" : ""}>${String(h).padStart(2,"0")}:00</option>`).join("")}</select>
+        <select data-i="${i}" data-k="hari">${HARI.map(([v, n]) => `<option value="${v}" ${v == (s.hari || "") ? "selected" : ""}>${n}</option>`).join("")}</select>
+        <button class="danger" data-buang="${i}">Buang</button></div>
+      <div class="row"><input data-i="${i}" data-k="nama" value="${esc(s.nama || "")}" placeholder="Nama surah" style="flex:1"></div>
+      <div class="row">${(s.fail || []).map((f, k) => `<span class="chip">${esc(f)}<button data-i="${i}" data-keluar="${k}">×</button></span>`).join("") || '<span class="dim">Tiada fail</span>'}</div>
+      <div class="row"><select data-i="${i}" data-tambah><option value="">+ tambah fail…</option>${files.map(f => `<option>${esc(f)}</option>`).join("")}</select>
+        <label class="row"><input type="checkbox" data-i="${i}" data-k="zikir_dulu" ${s.zikir_dulu ? "checked" : ""}> Zikir dahulu</label></div>
+    </div>`).join("") || '<p class="dim">Tiada surah dijadualkan.</p>';
+}
+$("#jadual").addEventListener("change", e => {
+  const el = e.target, i = +el.dataset.i; if (isNaN(i)) return;
+  if ("tambah" in el.dataset) { if (el.value) (surah[i].fail = surah[i].fail || []).push(el.value); drawJadual(); return; }
+  const k = el.dataset.k;
+  if (k === "jam") surah[i].jam = +el.value;
+  else if (k === "hari") { if (el.value) surah[i].hari = el.value; else delete surah[i].hari; }
+  else if (k === "zikir_dulu") surah[i].zikir_dulu = el.checked;
+  else if (k === "nama") surah[i].nama = el.value;
+});
+$("#jadual").addEventListener("click", e => {
+  const el = e.target;
+  if (el.dataset.buang !== undefined) { surah.splice(+el.dataset.buang, 1); drawJadual(); }
+  if (el.dataset.keluar !== undefined) { surah[+el.dataset.i].fail.splice(+el.dataset.keluar, 1); drawJadual(); }
+});
+$("#tambahSurah").onclick = () => { surah.push({jam: 22, nama: "", fail: []}); drawJadual(); };
+$("#simpanJadual").onclick = async () => {
+  const clean = surah.filter(s => (s.fail || []).length).map(s => ({...s, nama: (s.nama || "").trim()}));
+  // Friday entries first, so they win over an every-day one at the same hour
+  clean.sort((a, b) => (b.hari ? 1 : 0) - (a.hari ? 1 : 0));
+  try { await api("/api/tetapan", {method:"POST", body: JSON.stringify({surah: clean})}); toast("Jadual disimpan"); load(); } catch (e) { toast(e.message); }
+};
+$("#simpanTetapan").onclick = async () => {
+  const body = {zikir: $("#t_zikir").checked, azan: $("#t_azan").checked, auto_hidup: $("#t_auto").checked,
+    jam_mula: +$("#t_mula").value, jam_akhir: +$("#t_akhir").value, prayer_zone: $("#t_zon").value.trim().toUpperCase(),
+    wallpaper_minutes: Math.max(0, Math.min(1440, +$("#t_minit").value || 0)),
+    peringatan_minit: Math.max(0, Math.min(30, +$("#t_ingat").value || 0))};
+  try { await api("/api/tetapan", {method:"POST", body: JSON.stringify(body)}); toast("Tetapan disimpan"); load(); } catch (e) { toast(e.message); }
+};
+
+function drawFiles() {
+  const F = S.fail;
+  $("#surahFail").innerHTML = F.surah.map(f => `<div class="item"><span class="grow">${esc(f)}</span>
+      <button class="ghost" data-uji="surah" data-nama="${esc(f)}">Uji di TV</button><button class="danger" data-padam="surah" data-nama="${esc(f)}">Padam</button></div>`).join("") || '<p class="dim">Belum ada MP3 surah.</p>';
+  $("#azanGambar").innerHTML = F.azan_gambar ? `<img src="${url("azan-gambar", "azan.jpg")}" alt="Gambar azan">` : '<p class="dim">Tiada gambar azan.</p>';
+  $("#ingatGambar").innerHTML = F.peringatan_gambar ? `<img src="${url("peringatan-gambar", "peringatan.jpg")}" alt="Gambar peringatan">` : '<p class="dim">Tiada gambar peringatan.</p>';
+  $("#azanBunyi").innerHTML = (F.azan_bunyi ? `<div class="item"><span class="grow">Azan</span><audio controls preload="none" src="${url("azan-bunyi", "azan.mp3")}"></audio></div>` : '<p class="dim">Tiada bunyi azan.</p>')
+    + (F.azan_subuh ? `<div class="item"><span class="grow">Azan Subuh</span><audio controls preload="none" src="${url("azan-bunyi", "azan-subuh.mp3")}"></audio></div>` : "");
+  $("#masjid").innerHTML = F.masjid.filter(f => f.endsWith(".jpg")).map(f => `<figure><img loading="lazy" src="${url("masjid", f)}"><button data-padam="masjid" data-nama="${esc(f)}">Padam</button></figure>`).join("") || '<p class="dim">Tiada gambar.</p>';
+  const zf = {}; F.zikir.forEach(f => zf[f.slice(0, 2)] = f);
+  $("#zikir").innerHTML = S.zikir.map(z => { const n = String(z.no).padStart(2, "0"), f = zf[n];
+    return `<div class="item"><span class="grow"><b>${n}:00</b>${z.no == 24 ? " (tengah malam)" : ""} · ${esc(z.rumi)}</span>
+      ${f ? `<audio controls preload="none" src="${url("zikir", f)}"></audio>` : '<span class="dim">tiada rakaman</span>'}
+      <button class="ghost" data-pilih="zikir" data-nama="${n}">${f ? "Tukar" : "Muat naik"}</button></div>`; }).join("");
+}
+
+document.addEventListener("click", async e => {
+  const el = e.target.closest("button"); if (!el) return;
+  if (el.dataset.uji) {
+    try { await api("/api/uji?apa=" + el.dataset.uji + (el.dataset.nama ? "&nama=" + encodeURIComponent(el.dataset.nama) : ""), {method:"POST"}); toast("Lihat dan dengar di TV"); } catch (er) { toast(er.message); }
+  } else if (el.dataset.padam) {
+    if (!confirm("Padam " + el.dataset.nama + " dari TV?")) return;
+    try { await api("/api/padam?jenis=" + el.dataset.padam + "&nama=" + encodeURIComponent(el.dataset.nama), {method:"POST"}); toast("Dipadam"); load(); } catch (er) { toast(er.message); }
+  } else if (el.dataset.pilih) {
+    pick(el.dataset.pilih, el.dataset.nama);
+  }
+});
+
+function pick(jenis, nama) {
+  const f = $("#file");
+  const gambar = jenis === "masjid" || jenis === "azan-gambar" || jenis === "peringatan-gambar";
+  f.accept = gambar ? "image/*" : "audio/*,.mp3,.m4a";
+  f.multiple = jenis === "masjid";
+  f.value = "";
+  f.onchange = async () => {
+    for (const [i, file] of [...f.files].entries()) {
+      try {
+        let blob = file, name;
+        if (gambar) {
+          blob = await toTv(file);
+          const d = new Date(), p = n => String(n).padStart(2, "0");
+          name = jenis === "masjid" ? `foto-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}-${i}.jpg` : jenis === "peringatan-gambar" ? "peringatan.jpg" : "azan.jpg";
+        } else if (jenis === "zikir") {
+          const ext = (file.name.split(".").pop() || "mp3").toLowerCase();
+          name = nama + "." + ext;
+        } else if (jenis === "azan-bunyi") name = nama;
+        else name = file.name;
+        await send(jenis, name, blob, `${i + 1}/${f.files.length}`);
+      } catch (er) { toast(er.message, 4000); return; }
+    }
+    toast("Siap dimuat naik"); load();
+  };
+  f.click();
+}
+
+// A picture made the TV's size (1920x1080, filled; tall pictures sit on a blurred copy of themselves).
+async function toTv(file) {
+  const img = await createImageBitmap(file, {imageOrientation: "from-image"}).catch(() => createImageBitmap(file));
+  const W = 1920, H = 1080, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const g = c.getContext("2d"), r = img.width / img.height;
+  const cover = Math.max(W / img.width, H / img.height), fit = Math.min(W / img.width, H / img.height);
+  g.fillStyle = "#000"; g.fillRect(0, 0, W, H);
+  if (r >= 1.4) { g.drawImage(img, (W - img.width * cover) / 2, (H - img.height * cover) / 2, img.width * cover, img.height * cover); }
+  else {
+    if ("filter" in g) { g.filter = "blur(40px) brightness(0.55)"; g.drawImage(img, (W - img.width * cover) / 2, (H - img.height * cover) / 2, img.width * cover, img.height * cover); g.filter = "none"; }
+    g.drawImage(img, (W - img.width * fit) / 2, (H - img.height * fit) / 2, img.width * fit, img.height * fit);
+  }
+  for (const q of [0.82, 0.74, 0.66]) { const b = await new Promise(res => c.toBlob(res, "image/jpeg", q)); if (b.size < 400 * 1024 || q === 0.66) return b; }
+}
+
+function send(jenis, name, blob, label) {
+  return new Promise((res, rej) => {
+    const x = new XMLHttpRequest();
+    x.open("POST", "/api/naik?jenis=" + jenis + "&nama=" + encodeURIComponent(name));
+    x.upload.onprogress = e => { if (e.lengthComputable) toast(`Memuat naik ${label}: ${Math.round(e.loaded * 100 / e.total)}%`, 60000); };
+    x.onload = () => { let j = {}; try { j = JSON.parse(x.responseText); } catch (e) {} if (x.status === 401) { showLogin(); rej(new Error("Perlu PIN")); } else if (j.ok) res(j); else rej(new Error(j.ralat || "Gagal")); };
+    x.onerror = () => rej(new Error("Sambungan terputus"));
+    x.send(blob);
+  });
+}
+
+load();
+</script>
+</body>
+</html>
