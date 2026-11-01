@@ -14,6 +14,8 @@
   "surah": [
     { "jam": 4, "nama": "al-Waqiah", "fail": ["waqiah.mp3"] },
     { "jam": 5, "nama": "Yasin", "fail": ["yasin.mp3"] },
+    { "jam": 6, "minit": 30, "nama": "Doa Pagi", "fail": ["doapagi.mp3"] },
+    { "jam": 7, "nama": "Asmaul Husna", "fail": ["asmaulhusna.mp4"] },
     { "jam": 8, "hari": "jumaat", "nama": "ad-Dhuha, al-Insyirah, al-Kahfi", "zikir_dulu": true,
       "fail": ["dhuha.mp3", "alinsyirah.mp3", "alkahfi.mp3"] },
     { "jam": 8, "nama": "ad-Dhuha, al-Insyirah", "zikir_dulu": true, "fail": ["dhuha.mp3", "alinsyirah.mp3"] },

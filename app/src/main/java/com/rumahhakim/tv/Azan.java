@@ -24,6 +24,11 @@ final class Azan {
     private static final int WINDOW_MIN = 3;
     /** How long the animation stays without a sound file, and after the sound has ended. */
     private static final long SILENT_MS = 90_000L, AFTER_SOUND_MS = 8_000L;
+    /**
+     * The azan ends by these at the latest, should its sound stall and never finish: spare time past
+     * the sound's length, and a cap when the length is unknown.
+     */
+    private static final long SPARE_MS = 20_000L, LONGEST_MS = 10 * 60_000L;
     /** How long an azan-now test file counts as a test someone is waiting to see. */
     private static final long TEST_FRESH_MS = 2 * 60_000L;
 
@@ -103,7 +108,9 @@ final class Azan {
         parent.addView(view, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT));
         view.start();
+        PowerSession.begin();
         Log.i(TAG, "azan " + PrayerTimes.NAMES[index]);
+        handler.postDelayed(finish, LONGEST_MS);
 
         File sound = sound(ctx, index);
         if (sound == null) {
@@ -122,7 +129,14 @@ final class Azan {
                 handler.postDelayed(finish, SILENT_MS);
                 return true;
             });
-            player.setOnPreparedListener(MediaPlayer::start);
+            player.setOnPreparedListener(mp -> {
+                mp.start();
+                int length = mp.getDuration();
+                if (length > 0) {
+                    handler.removeCallbacks(finish);
+                    handler.postDelayed(finish, length + SPARE_MS);
+                }
+            });
             player.prepareAsync();
         } catch (Exception e) {
             Log.w(TAG, "cannot play " + sound + ": " + e.getMessage());
@@ -144,7 +158,7 @@ final class Azan {
         }).start();
         if (onEnd != null) onEnd.run();
         // A TV woken for this azan, and left alone during it, goes back to sleep.
-        PowerSession.done(parent.getContext());
+        PowerSession.end(parent.getContext());
     }
 
     private void releasePlayer() {

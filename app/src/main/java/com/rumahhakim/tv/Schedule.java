@@ -35,4 +35,16 @@ final class Schedule {
         c.add(java.util.Calendar.HOUR_OF_DAY, 1);
         return c.getTimeInMillis();
     }
+
+    /** The next time the clock shows hour:minute, strictly after {@code nowMillis}: today or tomorrow. */
+    static long nextAt(long nowMillis, java.util.TimeZone tz, int hour, int minute) {
+        java.util.Calendar c = java.util.Calendar.getInstance(tz);
+        c.setTimeInMillis(nowMillis);
+        c.set(java.util.Calendar.HOUR_OF_DAY, hour);
+        c.set(java.util.Calendar.MINUTE, minute);
+        c.set(java.util.Calendar.SECOND, 0);
+        c.set(java.util.Calendar.MILLISECOND, 0);
+        if (c.getTimeInMillis() <= nowMillis) c.add(java.util.Calendar.DAY_OF_MONTH, 1);
+        return c.getTimeInMillis();
+    }
 }

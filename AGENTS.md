@@ -93,11 +93,13 @@ and explain. A timeout or "connection refused" means debugging is off or the IP 
   their own `azan.mp3` (and `azan-subuh.mp3`) in `media/`.
 - **The four dock apps**, in order: `media/config.json` has Netflix, YouTube, unifi TV and RTMKlik. List
   what the TV has with `PY tools/tv.py "pm list packages -3"` (with `TV_HOST=<ip>`) and edit `dock_apps`.
-- **Surah readings** (optional): `media/config.json` schedules al-Waqiah 4:00, Yasin 5:00, ad-Dhuha and
-  al-Insyirah 8:00 (with al-Kahfi on Friday), al-Jumu'ah 12:00 on Friday and al-Mulk 22:00. The MP3s are
-  not in the repository: the person copies their own into `media/surah/` with those names
-  (`waqiah.mp3`, `yasin.mp3`, `dhuha.mp3`, `alinsyirah.mp3`, `alkahfi.mp3`, `jumuah.mp3`, `almulk.mp3`).
-  An hour whose files are missing plays the zikir instead.
+- **Readings** (optional): `media/config.json` schedules al-Waqiah 4:00, Yasin 5:00, Doa Pagi 6:30,
+  Asmaul Husna 7:00 (a 75 MB video, several minutes to send), ad-Dhuha and al-Insyirah 8:00 (with al-Kahfi
+  on Friday), al-Jumu'ah 12:00 on Friday and al-Mulk 22:00. Only `doapagi.mp3` and `asmaulhusna.mp4` are in
+  the repository, and their origin and licence are unconfirmed (CREDITS.md): tell the person, and delete them
+  from `media/surah/` before step 7 if they do not want them. For the rest, the person copies their own
+  into `media/surah/` with those names (`waqiah.mp3`, `yasin.mp3`, `dhuha.mp3`, `alinsyirah.mp3`, `alkahfi.mp3`,
+  `jumuah.mp3`, `almulk.mp3`). An hour whose files are missing plays the zikir instead.
 - **TV turning itself on** (`auto_hidup`, on in `media/config.json`): it wakes the TV every hour, through
   the night, for the zikir. Ask whether they want that, or a narrower `jam_mula`/`jam_akhir` (e.g. 6–22).
 
@@ -116,7 +118,7 @@ restored the old Home.
 `PY tools/pasang.py --tv <ip> tetapan --zon <ZONE>`
 
 It sends `media/`: `config.json` with their zone, the mosque photos, the azan and reminder pictures, the
-24 zikir voices, and the azan and surah MP3s if they are there.
+24 zikir voices, the two readings in `media/surah/`, and the azan and surah MP3s if they are there.
 **Checks**, one at a time (ask before the ones that show or sound):
 - `PY tools/tv.py "logcat -d -s TvHome.Solat"` shows `saved 365 days for <ZONE>` (the TV needs internet).
 - A screenshot of Home shows the prayer row under the clock and a mosque behind the apps:

@@ -29,7 +29,9 @@ import java.util.Calendar;
  * The azan over whatever app is in front (YouTube, Netflix, Live TV): the same full-screen azan
  * screen as on Home ({@link AzanView}, the family's picture), and the azan playing.
  * The app underneath is asked to pause (audio focus) and carries on afterwards. Any button on the
- * remote stops it; it also ends by itself once the azan has finished.
+ * remote stops it; it also ends by itself once the azan has finished, and at the latest a little
+ * after the azan's length even if another app paused the sound (otherwise the screen would stay up
+ * and keep the TV awake all evening).
  *
  * <p>Started by AzanAlarm at the prayer time. Needs "display over other apps", which the install
  * scripts grant ({@code appops set com.rumahhakim.tv SYSTEM_ALERT_WINDOW allow}). Runs only for the
@@ -39,11 +41,15 @@ public class AzanOverlay extends Service {
     private static final String TAG = "TvHome.Azan";
     private static final String CHANNEL = "azan";
     private static final long SILENT_MS = 60_000L, AFTER_SOUND_MS = 4_000L;
+    /** Spare time past the azan's length, and the cap when its length is unknown. */
+    private static final long SPARE_MS = 20_000L, LONGEST_MS = 10 * 60_000L;
+    private static final long CHECK_MS = 3_000L, LEAVE_MS = 1_500L;
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable finish = this::finish;
+    private final Runnable keepPlaying = this::keepPlaying;
     private WindowManager wm;
-    private Band band;
+    private Band band, leaving;
     private MediaPlayer player;
     private AudioManager audio;
     private AudioFocusRequest focus;
@@ -108,6 +114,8 @@ public class AzanOverlay extends Service {
                 PixelFormat.OPAQUE);
         wm.addView(band, lp);
         band.enter();
+        PowerSession.begin();
+        handler.postDelayed(finish, LONGEST_MS);
     }
 
     private void play(int index) {
@@ -134,7 +142,15 @@ public class AzanOverlay extends Service {
                 handler.postDelayed(finish, SILENT_MS);
                 return true;
             });
-            player.setOnPreparedListener(MediaPlayer::start);
+            player.setOnPreparedListener(mp -> {
+                mp.start();
+                int length = mp.getDuration();
+                if (length > 0) {
+                    handler.removeCallbacks(finish);
+                    handler.postDelayed(finish, length + SPARE_MS);
+                }
+                handler.postDelayed(keepPlaying, CHECK_MS);
+            });
             player.prepareAsync();
         } catch (Exception e) {
             Log.w(TAG, "cannot play " + sound + ": " + e.getMessage());
@@ -142,9 +158,28 @@ public class AzanOverlay extends Service {
         }
     }
 
+    /**
+     * Another app (YouTube taking the sound back) can pause the azan part way; carry on with it, as
+     * the azan is meant to be heard to the end.
+     */
+    private void keepPlaying() {
+        if (player == null) return;
+        try {
+            if (!player.isPlaying() && player.getCurrentPosition() < player.getDuration() - 1_000) {
+                Log.i(TAG, "azan was paused by another app; carrying on");
+                player.start();
+            }
+        } catch (IllegalStateException ignored) {
+            // completed or released; the completion listener ends the azan
+            return;
+        }
+        handler.postDelayed(keepPlaying, CHECK_MS);
+    }
+
     /** Stops the sound, lets the app underneath have its sound back and slides the band away. */
     private void finish() {
         handler.removeCallbacks(finish);
+        handler.removeCallbacks(keepPlaying);
         if (player != null) {
             try {
                 player.stop();
@@ -164,21 +199,32 @@ public class AzanOverlay extends Service {
         }
         final Band b = band;
         band = null;
-        b.leave(() -> {
-            try {
-                wm.removeView(b);
-            } catch (IllegalArgumentException ignored) {
-                // already gone
-            }
-            stopSelf();
-            PowerSession.done(this);
-        });
+        leaving = b;
+        b.leave(this::gone);
+        // Should the fade not finish (no frames drawn), take the screen away anyway.
+        handler.postDelayed(this::gone, LEAVE_MS);
+    }
+
+    /** Removes the azan screen once it has faded; safe to call twice. */
+    private void gone() {
+        if (leaving == null) return;
+        try {
+            wm.removeView(leaving);
+        } catch (IllegalArgumentException ignored) {
+            // already gone
+        }
+        leaving = null;
+        stopSelf();
+        PowerSession.end(this);
     }
 
     @Override
     public void onDestroy() {
         handler.removeCallbacks(finish);
+        handler.removeCallbacks(keepPlaying);
+        gone();
         if (band != null) {
+            PowerSession.end(this);
             try {
                 wm.removeView(band);
             } catch (IllegalArgumentException ignored) {

@@ -6,10 +6,13 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +36,12 @@ final class PowerSession {
      */
     private static final long SAFETY_MS = 70 * 60_000L;
     private static final Pattern LAST_ACTIVITY = Pattern.compile("mLastUserActivityTime=(\\d+)");
+    /** Between looks at whether anything is still on screen or playing. */
+    private static final long SETTLE_MS = 3_000;
+    /** The longest a check waits for the sound to end: past the longest surah. */
+    private static final long LONGEST_WAIT_MS = 75 * 60_000L;
+    private static final AtomicInteger BUSY = new AtomicInteger();
+    private static final AtomicBoolean CHECKING = new AtomicBoolean();
 
     private PowerSession() {
     }
@@ -46,6 +55,15 @@ final class PowerSession {
         PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.FULL_WAKE_LOCK
                 | PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.ON_AFTER_RELEASE, "rumahhakim:hidup");
         wl.acquire(5_000);
+        // The TV wakes into whatever app was in front when it was turned off (Netflix's profile page,
+        // say): Home comes to the front instead, with the zikir, surah or azan over it. Not the
+        // screensaver: its window sits above the overlays and would hide them.
+        try {
+            ctx.startActivity(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+                    .setPackage(ctx.getPackageName()).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (RuntimeException e) {
+            Log.w(TAG, "cannot bring Home to the front: " + e.getMessage());
+        }
         prefs(ctx).edit().putLong("woke_at", SystemClock.uptimeMillis()).apply();
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
         if (am != null) {
@@ -69,27 +87,53 @@ final class PowerSession {
         Log.i(TAG, "TV dihidupkan untuk PIN telefon");
     }
 
+    /** The azan, zikir, surah or reminder now on screen: the TV never sleeps while any is. */
+    static void begin() {
+        BUSY.incrementAndGet();
+    }
+
+    /** One of them has ended: when it was the last, see whether the TV may sleep. */
+    static void end(Context ctx) {
+        if (BUSY.decrementAndGet() < 0) BUSY.set(0);
+        done(ctx);
+    }
+
     /**
-     * Called when the azan, zikir or surah has ended: if this app woke the TV and nobody has pressed
-     * a button since, the TV goes back to sleep. Runs off the main thread.
+     * Called when the azan, zikir or surah has ended, or had nothing to show: if this app woke the TV,
+     * it waits until nothing of this app is on screen or playing (the azan on Home can still be going
+     * when the azan over other apps finds nothing to do), then puts the TV back to sleep if nobody has
+     * pressed a button since the wake. Runs off the main thread; one check at a time.
      */
     static void done(Context ctx) {
         final Context app = ctx.getApplicationContext();
-        final long wokeAt = prefs(app).getLong("woke_at", 0);
-        if (wokeAt == 0) return;
-        prefs(app).edit().remove("woke_at").apply();
-        AlarmManager am = (AlarmManager) app.getSystemService(Context.ALARM_SERVICE);
-        if (am != null) am.cancel(check(app));
+        if (prefs(app).getLong("woke_at", 0) == 0 || !CHECKING.compareAndSet(false, true)) return;
         new Thread(() -> {
-            String dump = CacheCleaner.run(app, CacheCleaner.POWER_STATE);
-            long last = dump != null ? lastUserActivity(dump) : -1;
-            if (last < 0) {
-                Log.i(TAG, "tidak dapat membaca butang remote terakhir; TV dibiarkan hidup");
-            } else if (nobodyThere(last, wokeAt)) {
-                CacheCleaner.run(app, CacheCleaner.SLEEP);
-                Log.i(TAG, "tiada sesiapa tekan remote; TV ditidurkan semula");
-            } else {
-                Log.i(TAG, "remote ditekan; TV kekal hidup");
+            try {
+                AudioManager audio = (AudioManager) app.getSystemService(Context.AUDIO_SERVICE);
+                long until = SystemClock.uptimeMillis() + LONGEST_WAIT_MS;
+                // A moment first, so the next thing (the surah after a zikir) can begin.
+                do {
+                    SystemClock.sleep(SETTLE_MS);
+                } while ((BUSY.get() > 0 || (audio != null && audio.isMusicActive()))
+                        && SystemClock.uptimeMillis() < until);
+                long wokeAt = prefs(app).getLong("woke_at", 0);
+                if (wokeAt == 0) return;
+                String dump = CacheCleaner.run(app, CacheCleaner.POWER_STATE);
+                long last = dump != null ? lastUserActivity(dump) : -1;
+                if (BUSY.get() > 0) return;   // something began during the check; it will call again
+                prefs(app).edit().remove("woke_at").apply();
+                AlarmManager am = (AlarmManager) app.getSystemService(Context.ALARM_SERVICE);
+                if (am != null) am.cancel(check(app));
+                if (last < 0) {
+                    Log.i(TAG, "tidak dapat membaca butang remote terakhir; TV dibiarkan hidup");
+                } else if (nobodyThere(last, wokeAt)) {
+                    CacheCleaner.run(app, CacheCleaner.SLEEP);
+                    Log.i(TAG, "tiada sesiapa tekan remote; TV ditidurkan semula");
+                } else {
+                    Log.i(TAG, "remote ditekan; TV kekal hidup");
+                }
+            } finally {
+                CHECKING.set(false);
             }
         }, "tidur").start();
     }

@@ -52,6 +52,8 @@ public class PeringatanOverlay extends Service {
         int index = intent != null ? intent.getIntExtra(Peringatan.EXTRA_INDEX, -1) : -1;
         if (screen != null || index < 0 || index >= PrayerTimes.NAMES.length || !Settings.canDrawOverlays(this)) {
             if (screen == null) {
+                Log.i(Peringatan.TAG, "no reminder shown: index " + index + ", overlay "
+                        + Settings.canDrawOverlays(this));
                 stopSelf();
                 PowerSession.done(this);
             }
@@ -114,6 +116,7 @@ public class PeringatanOverlay extends Service {
         view.start();
         screen.animate().alpha(1f).setDuration(500).start();
         screen.post(screen::requestFocus);
+        PowerSession.begin();
     }
 
     /** Three beeps of three seconds, a second apart. */
@@ -151,7 +154,7 @@ public class PeringatanOverlay extends Service {
                 // already gone
             }
             stopSelf();
-            PowerSession.done(this);
+            PowerSession.end(this);
         }).start();
     }
 
@@ -163,6 +166,7 @@ public class PeringatanOverlay extends Service {
             tone = null;
         }
         if (screen != null) {
+            PowerSession.end(this);
             try {
                 wm.removeView(screen);
             } catch (IllegalArgumentException ignored) {

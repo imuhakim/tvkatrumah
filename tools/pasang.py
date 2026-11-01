@@ -67,7 +67,7 @@ def push(d, local, remote):
         part = base64.b64encode(data[i * chunk:(i + 1) * chunk]).decode()
         if f"ok{i}" not in sh(d, f"echo '{part}' >> '{tmp}' && echo ok{i}", 60.0):
             raise SystemExit(f"gagal menghantar {local}")
-    got = sh(d, f"base64 -d '{tmp}' > '{remote}' && rm '{tmp}' && md5sum '{remote}'").split()
+    got = sh(d, f"base64 -d '{tmp}' > '{remote}' && rm '{tmp}' && md5sum '{remote}'", 600.0).split()
     if not got or got[0] != want:
         raise SystemExit(f"fail rosak semasa dihantar: {local}")
 
@@ -218,7 +218,7 @@ def tetapan(a):
             if n.endswith(".jpg") or n == "captions.json":
                 push(d, os.path.join(masjid, n), f"{FILES}/masjid/{n}")
         print("gambar latar dihantar")
-    for sub, types in (("zikir", (".mp3", ".m4a", ".ogg", ".wav")), ("surah", (".mp3", ".m4a"))):
+    for sub, types in (("zikir", (".mp3", ".m4a", ".ogg", ".wav")), ("surah", (".mp3", ".m4a", ".mp4"))):
         src = os.path.join(folder, sub)
         if not os.path.isdir(src):
             continue

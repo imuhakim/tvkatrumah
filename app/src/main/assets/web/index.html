@@ -167,7 +167,8 @@ function drawJadual() {
   const files = S.fail.surah;
   $("#jadual").innerHTML = surah.map((s, i) => `
     <div class="surah">
-      <div class="row"><select data-i="${i}" data-k="jam">${[...Array(24).keys()].map(h => `<option value="${h}" ${h == s.jam ? "selected" : ""}>${String(h).padStart(2,"0")}:00</option>`).join("")}</select>
+      <div class="row"><select data-i="${i}" data-k="jam">${[...Array(24).keys()].map(h => `<option value="${h}" ${h == s.jam ? "selected" : ""}>${String(h).padStart(2,"0")}</option>`).join("")}</select>
+        :<select data-i="${i}" data-k="minit">${[...new Set([...Array(12).keys()].map(m => m * 5).concat(s.minit || 0))].sort((a, b) => a - b).map(m => `<option value="${m}" ${m == (s.minit || 0) ? "selected" : ""}>${String(m).padStart(2,"0")}</option>`).join("")}</select>
         <select data-i="${i}" data-k="hari">${HARI.map(([v, n]) => `<option value="${v}" ${v == (s.hari || "") ? "selected" : ""}>${n}</option>`).join("")}</select>
         <button class="danger" data-buang="${i}">Buang</button></div>
       <div class="row"><input data-i="${i}" data-k="nama" value="${esc(s.nama || "")}" placeholder="Nama surah" style="flex:1"></div>
@@ -181,6 +182,7 @@ $("#jadual").addEventListener("change", e => {
   if ("tambah" in el.dataset) { if (el.value) (surah[i].fail = surah[i].fail || []).push(el.value); drawJadual(); return; }
   const k = el.dataset.k;
   if (k === "jam") surah[i].jam = +el.value;
+  else if (k === "minit") { if (+el.value) surah[i].minit = +el.value; else delete surah[i].minit; }
   else if (k === "hari") { if (el.value) surah[i].hari = el.value; else delete surah[i].hari; }
   else if (k === "zikir_dulu") surah[i].zikir_dulu = el.checked;
   else if (k === "nama") surah[i].nama = el.value;

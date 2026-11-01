@@ -20,17 +20,20 @@ import java.util.Locale;
  *   { "jam": 4, "nama": "al-Waqiah", "fail": ["waqiah.mp3"] },
  *   { "jam": 8, "hari": "jumaat", "nama": "ad-Dhuha, al-Insyirah, al-Kahfi", "zikir_dulu": true,
  *     "fail": ["dhuha.mp3", "alinsyirah.mp3", "alkahfi.mp3"] },
- *   { "jam": 12, "hari": "jumaat", "nama": "al-Jumu'ah", "fail": ["jumuah.mp3"] }
+ *   { "jam": 12, "hari": "jumaat", "nama": "al-Jumu'ah", "fail": ["jumuah.mp3"] },
+ *   { "jam": 6, "minit": 30, "nama": "Doa Pagi", "fail": ["doapagi.mp3"] }
  * ]
  * </pre>
  *
  * The first entry that fits the hour and day wins, so a Friday entry goes before an every-day one
- * at the same hour.
+ * at the same hour. One with "minit" plays at that minute past the hour, between the hourly zikir.
  */
 final class Surah {
     static final String DIR = "surah";
+    /** A late alarm (the TV in deep standby) still finds its surah this many minutes on. */
+    static final int LATE_MIN = 15;
 
-    final int hour, day;
+    final int hour, minute, day;
     final String name;
     final String[] files;
     /** The hour's zikir comes first, and the surah follows it ("zikir_dulu"). */
@@ -38,11 +41,12 @@ final class Surah {
 
     /** {@code day} is a Calendar day of the week, or -1 for every day. */
     Surah(int hour, int day, String name, String[] files) {
-        this(hour, day, name, files, false);
+        this(hour, 0, day, name, files, false);
     }
 
-    Surah(int hour, int day, String name, String[] files, boolean zikirFirst) {
+    Surah(int hour, int minute, int day, String name, String[] files, boolean zikirFirst) {
         this.hour = hour;
+        this.minute = minute;
         this.day = day;
         this.name = name;
         this.files = files;
@@ -50,7 +54,13 @@ final class Surah {
     }
 
     boolean at(int hourOfDay, int dayOfWeek) {
-        return hour == hourOfDay && (day < 0 || day == dayOfWeek);
+        return at(hourOfDay, minute, dayOfWeek);
+    }
+
+    /** Due at this time: from its minute until LATE_MIN later, on its day. */
+    boolean at(int hourOfDay, int minuteOfHour, int dayOfWeek) {
+        return hour == hourOfDay && minuteOfHour >= minute && minuteOfHour < minute + LATE_MIN
+                && (day < 0 || day == dayOfWeek);
     }
 
     /** "jumaat" (or "friday") to Calendar.FRIDAY, and so on; -1 for "semua", empty or unknown. */
@@ -92,16 +102,18 @@ final class Surah {
             if (hour < 0 || hour > 23 || f == null || f.length() == 0) continue;
             String[] files = new String[f.length()];
             for (int k = 0; k < files.length; k++) files[k] = new File(f.optString(k)).getName();
-            out.add(new Surah(hour, day(o.optString("hari", "")), o.optString("nama", "").trim(), files,
+            int minute = Math.max(0, Math.min(59, o.optInt("minit", 0)));
+            out.add(new Surah(hour, minute, day(o.optString("hari", "")), o.optString("nama", "").trim(), files,
                     o.optBoolean("zikir_dulu", false)));
         }
         return out;
     }
 
-    /** The surah set for this hour and day whose files are on the TV, or null. */
+    /** The surah set for this time and day whose files are on the TV, or null. */
     static Surah due(Context ctx, Calendar now) {
         for (Surah s : load(ctx)) {
-            if (s.at(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.DAY_OF_WEEK)) && !s.sounds(ctx).isEmpty()) return s;
+            if (s.at(now.get(Calendar.HOUR_OF_DAY), now.get(Calendar.MINUTE), now.get(Calendar.DAY_OF_WEEK))
+                    && !s.sounds(ctx).isEmpty()) return s;
         }
         return null;
     }

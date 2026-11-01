@@ -52,7 +52,14 @@ nyatakan kredit, dan kongsi dengan lesen yang sama jika diubah.
 | `09-selawat.mp3` | Selawat Ibrahimiyah | أحمد ناجي | CC BY-SA 4.0 | [الصلاة الإبراهيمية.mp3](https://commons.wikimedia.org/wiki/File:%D8%A7%D9%84%D8%B5%D9%84%D8%A7%D8%A9_%D8%A7%D9%84%D8%A5%D8%A8%D8%B1%D8%A7%D9%87%D9%8A%D9%85%D9%8A%D8%A9.mp3) |
 | `10-bismillah.wav` | Bismillah | باسم | Domain awam | [Bismillah Al-Rahman Al-Rahim-ar.wav](https://commons.wikimedia.org/wiki/File:Bismillah_Al-Rahman_Al-Rahim-ar.wav) |
 
-## Azan dan surah
+## Doa Pagi dan Asmaul Husna (`media/surah/`)
+
+`doapagi.mp3` (Doa Pagi) dan `asmaulhusna.mp4` (video Asmaul Husna) tidak termasuk dalam lesen MIT. Asal,
+pemilik dan lesen kedua-dua rakaman ini belum disahkan, dan fail itu sendiri tidak menyatakan kredit. Jangan
+anggap ia bebas digunakan semula. Jika anda pemilik haknya atau tahu sumbernya, sila buka issue supaya kredit
+ditambah atau fail itu dibuang.
+
+## Azan dan surah lain
 
 Tidak disertakan dalam repo ini. `tools/pasang.py azan` memuat turun `azan.mp3` (Ustaz Asri Ibrahim,
 Rabbani) dan `azan-subuh.mp3` dari

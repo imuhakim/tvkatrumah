@@ -17,10 +17,12 @@ __pycache__/
 # This TV's backup and change log (serial numbers, Wi-Fi names) stay on this computer
 backup/
 
-# Audio that is not ours to publish: the azan (tools/pasang.py azan fetches it) and your surah MP3s
+# Audio that stays out of the repo: the azan (tools/pasang.py azan fetches it) and your surah MP3s
 media/azan.mp3
 media/azan-subuh.mp3
-media/surah/
+media/surah/*
+!media/surah/doapagi.mp3
+!media/surah/asmaulhusna.mp4
 media/contoh-suara/
 
 # Your own pictures and recordings, if you keep them beside the repo

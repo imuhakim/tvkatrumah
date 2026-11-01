@@ -9,6 +9,7 @@ import android.os.Build;
 import android.util.Log;
 
 import java.util.Calendar;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -26,28 +27,43 @@ final class ZikirAlarm {
     static final String EXTRA_NOW = "now";
     /** On ZikirOverlay: start the hour's surah (SurahPlayer) once the zikir has ended. */
     static final String EXTRA_THEN_SURAH = "then_surah";
+    /** The alarm is for a surah at this minute past the hour (its "minit"), not the hour's zikir. */
+    static final String EXTRA_MINUTE = "minit";
 
     private ZikirAlarm() {
     }
 
     static long scheduleNext(Context ctx) {
         AlarmManager am = (AlarmManager) ctx.getSystemService(Context.ALARM_SERVICE);
-        PendingIntent pi = PendingIntent.getBroadcast(ctx, 0, new Intent(ACTION).setClass(ctx, Receiver.class),
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         if (am == null) return -1;
-        if (!Config.load(ctx).zikir && Surah.load(ctx).isEmpty()) {
-            am.cancel(pi);
+        List<Surah> surahs = Surah.load(ctx);
+        if (!Config.load(ctx).zikir && surahs.isEmpty()) {
+            am.cancel(PendingIntent.getBroadcast(ctx, 0, new Intent(ACTION).setClass(ctx, Receiver.class),
+                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE));
             Log.i(TAG, "zikir is off and no surah is set");
             return -1;
         }
-        // A second past the hour, so the clock on screen already says it.
-        long at = Schedule.nextHour(System.currentTimeMillis(), TimeZone.getDefault()) + 1000;
+        // A second past the hour (or a surah's minute), so the clock on screen already says it.
+        long now = System.currentTimeMillis();
+        long at = Schedule.nextHour(now, TimeZone.getDefault()) + 1000;
+        int minute = 0;
+        for (Surah s : surahs) {
+            if (s.minute == 0) continue;
+            long t = Schedule.nextAt(now, TimeZone.getDefault(), s.hour, s.minute) + 1000;
+            if (t < at) {
+                at = t;
+                minute = s.minute;
+            }
+        }
+        PendingIntent pi = PendingIntent.getBroadcast(ctx, 0,
+                new Intent(ACTION).setClass(ctx, Receiver.class).putExtra(EXTRA_MINUTE, minute),
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !am.canScheduleExactAlarms()) {
             am.setWindow(AlarmManager.RTC_WAKEUP, at, 60_000L, pi);
         } else {
             am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi);
         }
-        Log.i(TAG, "next zikir alarm at " + new java.util.Date(at));
+        Log.i(TAG, (minute == 0 ? "next zikir alarm at " : "next surah alarm at ") + new java.util.Date(at));
         return at;
     }
 
@@ -82,7 +98,11 @@ final class ZikirAlarm {
                 Calendar now = Calendar.getInstance();
                 boolean test = intent.getBooleanExtra(EXTRA_NOW, false);
                 Surah surah = test ? null : Surah.due(app, now);
-                String why = surah != null || test ? null : skipReason(app, config, now);
+                // An alarm between the hours is only for its surah: no zikir then.
+                int minute = intent.getIntExtra(EXTRA_MINUTE, 0);
+                String why = surah != null || test ? null
+                        : minute != 0 ? "no surah due at :" + minute
+                        : skipReason(app, config, now);
                 if (why != null) {
                     Log.i(TAG, "no zikir this hour: " + why);
                 } else if (!PowerSession.wakeIfAllowed(app, config)) {

@@ -146,6 +146,7 @@ public class ZikirOverlay extends Service {
         wm.addView(box, lp);
         box.animate().alpha(1f).translationY(0f).setDuration(600).start();
         box.post(box::requestFocus);
+        PowerSession.begin();
     }
 
     private TextView text(String s, float px, int color, float spacing) {
@@ -267,7 +268,7 @@ public class ZikirOverlay extends Service {
             }
             stopSelf();
             if (thenSurah) ZikirAlarm.start(this, SurahPlayer.class);
-            else PowerSession.done(this);
+            PowerSession.end(this);
         }).start();
     }
 
@@ -275,6 +276,7 @@ public class ZikirOverlay extends Service {
     public void onDestroy() {
         handler.removeCallbacksAndMessages(null);
         if (band != null) {
+            PowerSession.end(this);
             try {
                 wm.removeView(band);
             } catch (IllegalArgumentException ignored) {

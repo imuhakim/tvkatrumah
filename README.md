@@ -2,7 +2,7 @@
 
 **Skrin Home Islamik untuk Android TV, diurus dari telefon.** Waktu solat JAKIM di bawah jam, azan
 skrin penuh pada setiap waktu, peringatan 5 minit sebelum azan, zikir berbeza dengan suara setiap jam,
-bacaan surah mengikut jadual, dan screensaver gambar masjid. TV boleh hidup sendiri untuk azan dan zikir,
+bacaan surah, Doa Pagi dan video Asmaul Husna mengikut jadual, dan screensaver gambar masjid. TV boleh hidup sendiri untuk azan dan zikir,
 kemudian tidur semula jika tiada orang. Semua tetapan diubah dari pelayar telefon, tanpa komputer.
 
 Berasaskan launcher [Clear TV Islamic](https://github.com/Pokka99/cleartv-Islamic) (MIT), yang pula
@@ -33,7 +33,8 @@ dan TV menjadi peringatan solat untuk seisi rumah.
 | Azan semasa menonton YouTube, Netflix, siaran TV | Jalur di bawah skrin | **Skrin penuh** dengan gambar pilihan sendiri |
 | Peringatan sebelum azan | Tiada | **"Lagi 5 minit nak azan"**, skrin penuh dan 3 bunyi beep |
 | Zikir | Tiada | **24 zikir berbeza, satu setiap jam**, dengan suara, tulisan Arab, rumi dan maksud |
-| Bacaan surah | Tiada | **Mengikut jadual** (cth. al-Waqiah 4 pagi, Yasin 5 pagi, al-Kahfi pagi Jumaat, al-Mulk 10 malam) |
+| Bacaan surah | Tiada | **Mengikut jadual, hingga ke minit** (cth. al-Waqiah 4 pagi, Doa Pagi 6:30, Asmaul Husna 7 pagi, al-Kahfi pagi Jumaat, al-Mulk 10 malam) |
+| Video | Tiada | **Skrin penuh** dari jadual (`.mp4`) |
 | TV hidup sendiri | Tiada | **Hidup untuk azan, zikir dan surah**, tidur semula jika tiada siapa tekan remote |
 | Ubah tetapan | Komputer sahaja | **Dari telefon** (http://IP-TV:8080, dilindungi PIN) |
 | Tukar gambar dan rakaman | Komputer sahaja | **Dari galeri telefon**; gambar dikecilkan sendiri |
@@ -102,7 +103,7 @@ masukkan PIN 4 digit yang keluar di skrin TV. Telefon itu kekal log masuk selepa
 | `zikir`, `jam_mula`, `jam_akhir` | Zikir setiap jam, dan julat jamnya | `true`, 0 hingga 23 |
 | `jarak_solat_minit` | Langkau zikir jika waktu solat dalam sekian minit | `10` |
 | `auto_hidup` | Hidupkan TV untuk azan, zikir dan surah; tidurkan semula jika tiada orang | `true` |
-| `surah` | Jadual surah: `jam`, `hari` (pilihan, cth. `"jumaat"`), `nama`, `fail`, `zikir_dulu` | 6 bacaan |
+| `surah` | Jadual bacaan: `jam`, `minit` (pilihan), `hari` (pilihan, cth. `"jumaat"`), `nama`, `fail` (`.mp3`, `.m4a`, `.mp4`), `zikir_dulu` | 8 bacaan |
 | `dock_apps` | Empat app di dock, mengikut susunan | Netflix, YouTube, unifi TV, RTMKlik |
 | `wallpaper_minutes` | Gambar latar bertukar setiap sekian minit | `1` |
 | `ambient_glow` | Cahaya warna app terpilih di belakang Home | `false` |
@@ -121,8 +122,10 @@ Semua kunci tema Clear TV Islamic juga diterima; lihat
   **tidak** berlesen MIT: ia hanya untuk dimainkan bersama TV Kat Rumah, dan tidak boleh diklon atau digunakan
   untuk tujuan lain ([syarat penuh](CREDITS.md#suara-zikir-mediazikir)). Senarai zikir dan cara merakam
   sendiri: [ZIKIR.md](ZIKIR.md).
-- Audio azan dan surah **tidak** disertakan, kerana rakaman itu bukan milik kami untuk diterbitkan.
-  `tools/pasang.py azan` memuat turun azan dari Clear TV Islamic, dan MP3 surah anda sendiri diletakkan dalam `media/surah/`.
+- `media/surah/`: Doa Pagi (jam 6:30) dan video Asmaul Husna (jam 7:00, 75 MB). Kedua-duanya **tidak** berlesen MIT,
+  dan asal serta lesennya belum disahkan ([lihat CREDITS.md](CREDITS.md#doa-pagi-dan-asmaul-husna-mediasurah)).
+- Audio azan dan MP3 surah lain **tidak** disertakan. `tools/pasang.py azan` memuat turun azan dari
+  Clear TV Islamic, dan MP3 surah anda sendiri diletakkan dalam `media/surah/`.
 
 ## Membina sendiri
 
