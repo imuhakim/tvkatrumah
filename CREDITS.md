@@ -25,9 +25,19 @@ CC BY-SA 4.0) dan `media/peringatan.jpg` ialah `02.jpg` (Masjid Nabawi, Muhammad
 
 24 rakaman dijana dengan [ElevenLabs](https://elevenlabs.io) (`tools/suara-zikir.py`, model
 eleven_multilingual_v2) daripada teks dalam
-[Zikir.java](app/src/main/java/com/rumahhakim/tv/Zikir.java), oleh pemilik repo ini dengan suara dalam akaun
-ElevenLabs miliknya. Untuk kegunaan peribadi di rumah; untuk suara lain, jana semula dengan
-`tools/suara-zikir.py` menggunakan akaun anda sendiri.
+[Zikir.java](app/src/main/java/com/rumahhakim/tv/Zikir.java). Ini **suara pemilik repo ini sendiri** (imuhakim),
+diklon dengan ElevenLabs.
+
+**Syarat penggunaan suara.** Rakaman ini tidak termasuk dalam lesen MIT. Hak atas suara ini kekal pada
+pemiliknya. Anda boleh memuat turun dan memainkannya bersama TV Kat Rumah, termasuk versi TV Kat Rumah
+yang anda ubah suai, untuk kegunaan bukan komersial. Anda tidak boleh:
+
+- mengklon suara ini, atau menggunakannya untuk melatih mana-mana model suara atau AI
+- menggunakan rakaman ini di luar TV Kat Rumah, atau mengubahnya untuk menghasilkan kata-kata lain
+- menjual rakaman ini, atau menggunakannya dalam produk atau iklan
+
+Untuk suara lain, jana semula dengan `tools/suara-zikir.py` menggunakan akaun anda sendiri, atau rakam sendiri
+(lihat [ZIKIR.md](ZIKIR.md)).
 
 ## Rakaman dalam app (`app/src/main/assets/zikir/`)
 

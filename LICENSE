@@ -24,8 +24,11 @@ SOFTWARE.
 
 ---
 
-The recordings in app/src/main/assets/zikir/ are not under this licence; each keeps its own
-licence, listed in CREDITS.md.
+The pictures in media/ and the recordings in app/src/main/assets/zikir/ are not under this licence; each
+keeps its own licence, listed in CREDITS.md.
+
+The voice recordings in media/zikir/ are not under this licence. They are the voice of the repository's
+owner and may only be played with TV Kat Rumah, for non-commercial use; see the terms in CREDITS.md.
 
 The Outfit typeface in app/src/main/res/font/outfit.ttf is copyright The Outfit Project Authors and
 licensed under the SIL Open Font License 1.1, see FONT-LICENSE-OFL.txt.

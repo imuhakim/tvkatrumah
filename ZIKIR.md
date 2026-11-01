@@ -4,7 +4,7 @@ Satu zikir untuk setiap jam (zikir 24 pada tengah malam). Rakam setiap satu 10 h
 telefon, dan simpan dengan nombor zikir sebagai nama fail: `01.mp3` hingga `24.mp3` (`.m4a`, `.ogg` dan `.wav`
 juga boleh). Muat naik dari halaman tetapan telefon, atau letak dalam `media/zikir/` dan
 jalankan `tools/pasang.py tetapan`. Rakaman yang lebih panjang
-dari 15 saat diperlahankan dan dihentikan oleh app pada saat ke-15. Repo ini sudah ada 24 suara (ElevenLabs);
+dari 15 saat diperlahankan dan dihentikan oleh app pada saat ke-15. Repo ini sudah ada 24 rakaman dalam suara pemilik repo (lihat syaratnya dalam CREDITS.md);
 rakaman sendiri menggantikannya.
 
 Jam yang ada surah (lihat `"surah"` dalam tetapan) memainkan surah, bukan zikir, kecuali surah dengan

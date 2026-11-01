@@ -117,7 +117,10 @@ Semua kunci tema Clear TV Islamic juga diterima; lihat
   Masjid Putra dan lain-lain), dengan nama dan kredit jurugambar dalam `captions.json`.
   `media/azan.jpg` dan `media/peringatan.jpg` ialah dua daripadanya. Ganti dengan gambar sendiri bila-bila
   masa dari telefon.
-- `media/zikir/`: 24 suara zikir, dijana dengan ElevenLabs. Senarai dan cara merakam sendiri: [ZIKIR.md](ZIKIR.md).
+- `media/zikir/`: 24 zikir dalam **suara pemilik repo ini sendiri**, diklon dengan ElevenLabs. Suara ini
+  **tidak** berlesen MIT: ia hanya untuk dimainkan bersama TV Kat Rumah, dan tidak boleh diklon atau digunakan
+  untuk tujuan lain ([syarat penuh](CREDITS.md#suara-zikir-mediazikir)). Senarai zikir dan cara merakam
+  sendiri: [ZIKIR.md](ZIKIR.md).
 - Audio azan dan surah **tidak** disertakan, kerana rakaman itu bukan milik kami untuk diterbitkan.
   `tools/pasang.py azan` memuat turun azan dari Clear TV Islamic, dan MP3 surah anda sendiri diletakkan dalam `media/surah/`.
 
@@ -129,4 +132,5 @@ mengemas kini APK dari `dist/` tanpa uninstall dahulu.
 
 ## Kredit dan lesen
 
-Kod: MIT ([LICENSE](LICENSE)). Gambar, suara dan fon: lesen masing-masing dalam [CREDITS.md](CREDITS.md).
+Kod: MIT ([LICENSE](LICENSE)). Gambar dan fon: lesen masing-masing dalam [CREDITS.md](CREDITS.md). Suara
+zikir: bukan MIT, ikut syarat dalam [CREDITS.md](CREDITS.md#suara-zikir-mediazikir).

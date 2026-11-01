@@ -1,0 +1,9 @@
+Rakaman dalam folder ini ialah suara pemilik repo (imuhakim), diklon dengan ElevenLabs.
+Ia TIDAK berlesen MIT. Hanya untuk dimainkan bersama TV Kat Rumah, bukan untuk tujuan komersial.
+Tidak boleh diklon, digunakan untuk melatih model suara atau AI, atau digunakan untuk tujuan lain.
+Syarat penuh: CREDITS.md
+
+These recordings are the voice of the repository's owner (imuhakim), cloned with ElevenLabs.
+They are NOT under the MIT licence. They may only be played with TV Kat Rumah, for non-commercial use.
+They may not be cloned, used to train voice or AI models, or used for anything else.
+Full terms: CREDITS.md
