@@ -18,6 +18,12 @@ public class WebUtilTest {
         assertNull(WebUtil.safeName(WebUtil.Kind.SURAH, "../..mp3"));
         assertEquals("raya-2026.jpg", WebUtil.safeName(WebUtil.Kind.MASJID, "Raya 2026.jpeg"));
         assertNull(WebUtil.safeName(WebUtil.Kind.MASJID, "gambar.png"));
+        // the picture names, and only that JSON
+        assertEquals("captions.json", WebUtil.safeName(WebUtil.Kind.MASJID, "captions.json"));
+        assertNull(WebUtil.safeName(WebUtil.Kind.MASJID, "config.json"));
+        // a video reading, as the default schedule's Asmaul Husna
+        assertEquals("asmaulhusna.mp4", WebUtil.safeName(WebUtil.Kind.SURAH, "asmaulhusna.mp4"));
+        assertNull(WebUtil.safeName(WebUtil.Kind.ZIKIR, "05.mp4"));
     }
 
     @Test

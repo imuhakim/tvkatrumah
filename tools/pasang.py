@@ -23,6 +23,8 @@ import json
 import os
 import sys
 import time
+import urllib.error
+import urllib.parse
 import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -197,6 +199,12 @@ def tetapan(a):
         print("AMARAN: tiada zon solat (--zon). Waktu solat dan azan tidak akan keluar.")
     d = dev()
     sh(d, f"mkdir -p {FILES}/zikir {FILES}/surah {FILES}/masjid")
+    # Android 11 and later keep the computer out of the app's folder (mkdir says nothing, writes fail):
+    # send everything through the app's own settings page instead, with the PIN on the TV.
+    if "boleh" not in sh(d, f"echo x > {FILES}/.tulis 2>/dev/null && rm {FILES}/.tulis && echo boleh"):
+        d.close()
+        print("Android ini tidak membenarkan komputer menulis ke folder app; fail dihantar melalui halaman tetapan TV.")
+        return tetapan_web(os.environ["TV_HOST"], folder, cfg)
     tmp = os.path.join(BACKUP, "config-dihantar.json")
     os.makedirs(BACKUP, exist_ok=True)
     with open(tmp, "w", encoding="utf-8") as f:
@@ -235,6 +243,60 @@ def tetapan(a):
     sh(d, f"am start -W -n {PKG}/.TetapanActivity; sleep 4; am force-stop {PKG}; input keyevent KEYCODE_HOME")
     log(f"tetapan dihantar dari {folder}")
     d.close()
+    print("Siap. Tetapan dari telefon: buka http://<IP TV>:8080 di Wi-Fi rumah.")
+
+
+def tetapan_web(host, folder, cfg):
+    """The same as tetapan, through http://<TV>:8080: the TV shows a PIN, the person types it here."""
+    base, cookie = f"http://{host}:8080", [""]
+
+    def call(path, data=b"", ctype="application/octet-stream", timeout=60):
+        req = urllib.request.Request(base + path, data=data, method="POST")
+        req.add_header("Content-Type", ctype)
+        if cookie[0]:
+            req.add_header("Cookie", cookie[0])
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                if r.headers.get("Set-Cookie"):
+                    cookie[0] = r.headers["Set-Cookie"].split(";")[0]
+                return json.loads(r.read() or b"{}")
+        except urllib.error.HTTPError as e:
+            return json.loads(e.read() or b"{}")
+        except OSError as e:
+            raise SystemExit(f"Halaman tetapan TV tidak dapat dihubungi ({e}). Pastikan TV Kat Rumah ialah Home (langkah pasang).")
+
+    def upload(jenis, path, nama=None):
+        nama = nama or os.path.basename(path)
+        q = urllib.parse.urlencode({"jenis": jenis, "nama": nama})
+        with open(path, "rb") as f:
+            data = f.read()
+        res = call(f"/api/naik?{q}", data, timeout=900)
+        print(f"  {jenis:18} {nama:22} {len(data) // 1024:>7} KB  {'OK' if res.get('ok') else 'GAGAL: ' + str(res.get('ralat'))}")
+        return bool(res.get("ok"))
+
+    call("/api/pin")
+    print("PIN 4 angka kini keluar di penjuru kanan atas skrin TV (sah 2 minit).")
+    res = call("/api/masuk", urllib.parse.urlencode({"pin": input("Taip PIN itu: ").strip()}).encode(),
+               "application/x-www-form-urlencoded")
+    if not res.get("ok"):
+        raise SystemExit(f"Log masuk gagal: {res.get('ralat')}")
+    res = call("/api/tetapan", json.dumps(cfg).encode(), "application/json")
+    print(f"config.json (zon {cfg.get('prayer_zone')}): {'OK' if res.get('ok') else 'GAGAL: ' + str(res.get('ralat'))}")
+    failed = 0 if res.get("ok") else 1
+    for name, jenis in (("azan.jpg", "azan-gambar"), ("peringatan.jpg", "peringatan-gambar"),
+                        ("azan.mp3", "azan-bunyi"), ("azan-subuh.mp3", "azan-bunyi")):
+        p = os.path.join(folder, name)
+        if os.path.isfile(p):
+            failed += not upload(jenis, p)
+    for sub, exts in (("masjid", (".jpg", "captions.json")), ("zikir", (".mp3", ".m4a", ".ogg", ".wav")),
+                      ("surah", (".mp3", ".m4a", ".mp4"))):
+        src = os.path.join(folder, sub)
+        for n in sorted(os.listdir(src)) if os.path.isdir(src) else []:
+            if n.lower().endswith(exts):
+                failed += not upload(sub, os.path.join(src, n))
+    log(f"tetapan dihantar dari {folder} melalui halaman tetapan TV")
+    if failed:
+        raise SystemExit(f"{failed} fail gagal; jalankan sekali lagi untuk cuba semula.")
     print("Siap. Tetapan dari telefon: buka http://<IP TV>:8080 di Wi-Fi rumah.")
 
 

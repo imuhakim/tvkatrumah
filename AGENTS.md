@@ -119,13 +119,19 @@ restored the old Home.
 
 It sends `media/`: `config.json` with their zone, the mosque photos, the azan and reminder pictures, the
 24 zikir voices, the two readings in `media/surah/`, and the azan and surah MP3s if they are there.
+
+**Android 11 and later** do not let the computer write into the app's folder. `tetapan` notices and sends
+everything through the app's own settings page instead: the TV shows a 4-digit PIN in its top right
+corner, and the person types it into the terminal (never you). Large files, the 75 MB Asmaul Husna video
+above all, take a few minutes over Wi-Fi.
 **Checks**, one at a time (ask before the ones that show or sound):
 - `PY tools/tv.py "logcat -d -s TvHome.Solat"` shows `saved 365 days for <ZONE>` (the TV needs internet).
 - A screenshot of Home shows the prayer row under the clock and a mosque behind the apps:
   `screencap -p /sdcard/s.png`, then `PY tools/tv.py --pull /sdcard/s.png s.png`.
 - The zikir (plays aloud): `am broadcast -a com.rumahhakim.tv.ZIKIR -n 'com.rumahhakim.tv/.ZikirAlarm$Receiver' --ez now true`
 - The azan (plays aloud): `touch /sdcard/Android/data/com.rumahhakim.tv/files/azan-now`, then
-  `input keyevent KEYCODE_HOME`. Any button on the remote stops it.
+  `input keyevent KEYCODE_HOME`. Any button on the remote stops it. On Android 11 and later the `touch`
+  is refused; use **Uji azan** on the phone page (step 8) instead.
 
 ### 8. The phone settings page, and the second "Allow USB debugging?"
 

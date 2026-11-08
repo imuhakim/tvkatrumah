@@ -16,9 +16,11 @@ final class WebUtil {
         AZAN_GAMBAR("", new String[]{"jpg"}, 15 << 20),
         PERINGATAN_GAMBAR("", new String[]{"jpg"}, 15 << 20),
         AZAN_BUNYI("", new String[]{"mp3"}, 30 << 20),
-        MASJID("masjid", new String[]{"jpg"}, 15 << 20),
+        // captions.json names the pictures; no other JSON may go there
+        MASJID("masjid", new String[]{"jpg", "json"}, 15 << 20),
         ZIKIR("zikir", new String[]{"mp3", "m4a", "ogg", "wav"}, 5 << 20),
-        SURAH("surah", new String[]{"mp3", "m4a"}, 120 << 20);
+        // mp4: a full-screen video reading (SurahPlayer), such as the Asmaul Husna
+        SURAH("surah", new String[]{"mp3", "m4a", "mp4"}, 120 << 20);
 
         final String dir;
         final String[] types;
@@ -70,6 +72,8 @@ final class WebUtil {
                 return "peringatan.jpg";
             case AZAN_BUNYI:
                 return base.contains("subuh") ? "azan-subuh.mp3" : "azan.mp3";
+            case MASJID:
+                return ext.equals("json") ? (base.equals("captions") ? "captions.json" : null) : base + "." + ext;
             case ZIKIR: {
                 // 01 to 24, the zikir's number
                 if (!base.matches("\\d{1,2}")) return null;

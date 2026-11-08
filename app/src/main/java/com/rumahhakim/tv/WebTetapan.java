@@ -470,6 +470,7 @@ final class WebTetapan {
             return;
         }
         String type = name.endsWith(".jpg") ? "image/jpeg" : name.endsWith(".m4a") ? "audio/mp4"
+                : name.endsWith(".mp4") ? "video/mp4" : name.endsWith(".json") ? "application/json"
                 : name.endsWith(".ogg") ? "audio/ogg" : name.endsWith(".wav") ? "audio/wav" : "audio/mpeg";
         String head = "HTTP/1.1 200 OK\r\nContent-Type: " + type + "\r\nContent-Length: " + f.length()
                 + "\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n";

@@ -238,7 +238,7 @@ document.addEventListener("click", async e => {
 function pick(jenis, nama) {
   const f = $("#file");
   const gambar = jenis === "masjid" || jenis === "azan-gambar" || jenis === "peringatan-gambar";
-  f.accept = gambar ? "image/*" : "audio/*,.mp3,.m4a";
+  f.accept = gambar ? "image/*" : jenis === "surah" ? "audio/*,video/mp4,.mp3,.m4a,.mp4" : "audio/*,.mp3,.m4a";
   f.multiple = jenis === "masjid";
   f.value = "";
   f.onchange = async () => {
