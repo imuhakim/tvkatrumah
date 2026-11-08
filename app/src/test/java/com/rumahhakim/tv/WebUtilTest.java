@@ -24,6 +24,10 @@ public class WebUtilTest {
         // a video reading, as the default schedule's Asmaul Husna
         assertEquals("asmaulhusna.mp4", WebUtil.safeName(WebUtil.Kind.SURAH, "asmaulhusna.mp4"));
         assertNull(WebUtil.safeName(WebUtil.Kind.ZIKIR, "05.mp4"));
+        // the screensaver's videos, and nothing else
+        assertEquals(WebUtil.Kind.SCREENSAVER, WebUtil.Kind.of("screensaver"));
+        assertEquals("laut-malam.mp4", WebUtil.safeName(WebUtil.Kind.SCREENSAVER, "Laut Malam.MP4"));
+        assertNull(WebUtil.safeName(WebUtil.Kind.SCREENSAVER, "gambar.jpg"));
     }
 
     @Test

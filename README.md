@@ -2,7 +2,8 @@
 
 **Skrin Home Islamik untuk Android TV, diurus dari telefon.** Waktu solat JAKIM di bawah jam, azan
 skrin penuh pada setiap waktu, peringatan 5 minit sebelum azan, zikir berbeza dengan suara setiap jam,
-bacaan surah, Doa Pagi dan video Asmaul Husna mengikut jadual, dan screensaver gambar masjid. TV boleh hidup sendiri untuk azan dan zikir,
+bacaan surah, Doa Pagi dan video Asmaul Husna mengikut jadual, dan screensaver gambar masjid atau video
+(MP4 tanpa bunyi di belakang jam, dimuat naik dari telefon, dengan butang Uji screensaver). TV boleh hidup sendiri untuk azan dan zikir,
 kemudian tidur semula jika tiada orang. Semua tetapan diubah dari pelayar telefon, tanpa komputer.
 
 Berasaskan launcher [Clear TV Islamic](https://github.com/Pokka99/cleartv-Islamic) (MIT), yang pula

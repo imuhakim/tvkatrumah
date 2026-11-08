@@ -20,7 +20,9 @@ final class WebUtil {
         MASJID("masjid", new String[]{"jpg", "json"}, 15 << 20),
         ZIKIR("zikir", new String[]{"mp3", "m4a", "ogg", "wav"}, 5 << 20),
         // mp4: a full-screen video reading (SurahPlayer), such as the Asmaul Husna
-        SURAH("surah", new String[]{"mp3", "m4a", "mp4"}, 120 << 20);
+        SURAH("surah", new String[]{"mp3", "m4a", "mp4"}, 120 << 20),
+        // videos played without sound behind the screensaver's clock (IslamicDream)
+        SCREENSAVER("screensaver", new String[]{"mp4"}, 200 << 20);
 
         final String dir;
         final String[] types;
@@ -40,6 +42,7 @@ final class WebUtil {
                 case "masjid": return MASJID;
                 case "zikir": return ZIKIR;
                 case "surah": return SURAH;
+                case "screensaver": return SCREENSAVER;
                 default: return null;
             }
         }

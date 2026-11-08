@@ -58,6 +58,11 @@ final class IslamicDream {
     private boolean upperShown;
     private TextView photoCaption, photoCredit;
     private int photoIndex = -1, screenW, screenH;
+    /** Videos from files/screensaver/, played one after another without sound, in place of the photos. */
+    static final String VIDEO_DIR = "screensaver";
+    private final List<java.io.File> videos = new ArrayList<>();
+    private android.widget.VideoView video;
+    private int videoIndex;
     private boolean decoding;
 
     IslamicDream(android.service.dreams.DreamService dream, String zone) {
@@ -104,7 +109,7 @@ final class IslamicDream {
         arabic = dream.findViewById(R.id.islamicArabic);
         meaning = dream.findViewById(R.id.islamicMeaning);
         ref = dream.findViewById(R.id.islamicRef);
-        loadPhotos(dream, root);
+        if (!loadVideos(dream, root)) loadPhotos(dream, root);
         loadVerses();
         verseIndex = verses.isEmpty() ? 0 : random.nextInt(verses.size());
         showVerse();
@@ -251,8 +256,64 @@ final class IslamicDream {
         verse.setVisibility(View.VISIBLE);
     }
 
-    /** Frees the photo in memory; the screensaver is going away. */
+    /**
+     * The videos in files/screensaver/, if there are any: a muted VideoView takes the photos' place
+     * behind the clock, playing them in name order and round again (one alone loops). False when
+     * there are none, and the photos show as before.
+     */
+    private boolean loadVideos(android.service.dreams.DreamService dream, ViewGroup root) {
+        java.io.File dir = Config.dir(dream);
+        java.io.File[] fs = dir != null ? new java.io.File(dir, VIDEO_DIR).listFiles() : null;
+        if (fs == null) return false;
+        java.util.Arrays.sort(fs);
+        for (java.io.File f : fs) {
+            if (f.isFile() && f.length() > 0 && f.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".mp4")) videos.add(f);
+        }
+        if (videos.isEmpty()) return false;
+        pattern.setVisibility(View.GONE);
+        video = new android.widget.VideoView(dream);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            // No sound, so it takes nothing from anything else that might play.
+            video.setAudioFocusRequest(android.media.AudioManager.AUDIOFOCUS_NONE);
+        }
+        root.addView(video, 1, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT, android.view.Gravity.CENTER));
+        // Lighter than over the photos: a video carries its own picture, the gold text still reads.
+        View dim = new View(dream);
+        dim.setBackground(new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0x99020806, 0x73020806, 0x80020806, 0xCC020806}));
+        root.addView(dim, 2, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT));
+        video.setOnPreparedListener(mp -> {
+            mp.setVolume(0f, 0f);
+            mp.setLooping(videos.size() == 1);
+            video.start();
+        });
+        video.setOnCompletionListener(mp -> playVideo(videoIndex + 1));
+        video.setOnErrorListener((mp, what, extra) -> {
+            Log.w(TAG, "screensaver video failed: " + videos.get(videoIndex).getName() + " " + what + "/" + extra);
+            // Another video if there is one; otherwise the plain background stays.
+            if (videos.size() > 1) video.post(() -> playVideo(videoIndex + 1));
+            return true;
+        });
+        playVideo(0);
+        Log.i(TAG, "screensaver videos: " + videos.size());
+        return true;
+    }
+
+    private void playVideo(int i) {
+        if (video == null) return;
+        videoIndex = i % videos.size();
+        video.setVideoPath(videos.get(videoIndex).getPath());
+    }
+
+    /** Frees the photo or the video; the screensaver is going away. */
     void release() {
+        if (video != null) {
+            video.stopPlayback();
+            video = null;
+        }
         if (photoLower == null) return;
         photoLower.animate().cancel();
         photoUpper.animate().cancel();

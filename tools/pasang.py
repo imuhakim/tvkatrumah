@@ -225,7 +225,7 @@ def tetapan(a):
     if not cfg.get("prayer_zone"):
         print("AMARAN: tiada zon solat (--zon). Waktu solat dan azan tidak akan keluar.")
     d = dev()
-    sh(d, f"mkdir -p {FILES}/zikir {FILES}/surah {FILES}/masjid")
+    sh(d, f"mkdir -p {FILES}/zikir {FILES}/surah {FILES}/masjid {FILES}/screensaver")
     # Android 11 and later keep the computer out of the app's folder (mkdir says nothing, writes fail):
     # send everything through the app's own settings page instead, with the PIN on the TV.
     if "boleh" not in sh(d, f"echo x > {FILES}/.tulis 2>/dev/null && rm {FILES}/.tulis && echo boleh"):
@@ -255,7 +255,8 @@ def tetapan(a):
             if n.endswith(".jpg") or n == "captions.json":
                 push(d, os.path.join(masjid, n), f"{FILES}/masjid/{n}")
         print("gambar latar dihantar")
-    for sub, types in (("zikir", (".mp3", ".m4a", ".ogg", ".wav")), ("surah", (".mp3", ".m4a", ".mp4"))):
+    for sub, types in (("zikir", (".mp3", ".m4a", ".ogg", ".wav")), ("surah", (".mp3", ".m4a", ".mp4")),
+                       ("screensaver", (".mp4",))):
         src = os.path.join(folder, sub)
         if not os.path.isdir(src):
             continue
@@ -330,7 +331,7 @@ def tetapan_web(host, folder, cfg):
         if os.path.isfile(p):
             failed += not upload(jenis, p)
     for sub, exts in (("masjid", (".jpg", "captions.json")), ("zikir", (".mp3", ".m4a", ".ogg", ".wav")),
-                      ("surah", (".mp3", ".m4a", ".mp4"))):
+                      ("surah", (".mp3", ".m4a", ".mp4")), ("screensaver", (".mp4",))):
         src = os.path.join(folder, sub)
         for n in sorted(os.listdir(src)) if os.path.isdir(src) else []:
             if not n.lower().endswith(exts):

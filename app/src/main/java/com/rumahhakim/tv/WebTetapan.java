@@ -370,7 +370,7 @@ final class WebTetapan {
         }
         out.put("zikir", zikir);
         JSONObject files = new JSONObject();
-        for (String d : new String[]{"masjid", "zikir", "surah"}) {
+        for (String d : new String[]{"masjid", "zikir", "surah", IslamicDream.VIDEO_DIR}) {
             JSONArray list = new JSONArray();
             File[] fs = dir != null ? new File(dir, d).listFiles() : null;
             if (fs != null) {
@@ -502,6 +502,22 @@ final class WebTetapan {
                 Intent svc = new Intent(ctx, SurahPlayer.class).putExtra(SurahPlayer.EXTRA_FILE, name);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) ctx.startForegroundService(svc);
                 else ctx.startService(svc);
+                return new JSONObject().put("ok", true);
+            }
+            case "screensaver": {
+                // The TV's own "start screensaver now" screen (the same as `am start -n
+                // com.android.systemui/.Somnambulator`); it starts whichever screensaver is chosen,
+                // TV Kat Rumah's once tools/pasang.py has set it. Any button on the remote ends it.
+                PowerSession.wakeForSomeone(ctx);
+                Intent dream = new Intent(Intent.ACTION_MAIN)
+                        .setClassName("com.android.systemui", "com.android.systemui.Somnambulator")
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                try {
+                    ctx.startActivity(dream);
+                } catch (Exception e) {
+                    Log.w(TAG, "cannot start the screensaver: " + e);
+                    return new JSONObject().put("ok", false).put("ralat", "TV ini tidak membenarkan screensaver dimulakan dari app");
+                }
                 return new JSONObject().put("ok", true);
             }
             default:

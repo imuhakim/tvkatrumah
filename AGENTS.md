@@ -146,8 +146,10 @@ the same name is not sent again.
 
 Tell the person to open **http://\<ip\>:8080** on a phone on the same Wi-Fi and press **"Tunjuk PIN di TV"**:
 a 4-digit PIN appears in the TV's top right corner for two minutes; once typed in, that phone stays logged
-in. From there they change every setting, the surah schedule, the pictures and recordings, and try the
-zikir, azan and a surah; no computer needed again.
+in. From there they change every setting, the surah schedule, the pictures and recordings, add MP4
+videos for the screensaver (played without sound behind the clock, in place of the photos), and try the
+zikir, azan, a surah and the screensaver; no computer needed again. iPhone videos are often .mov: they
+need converting to MP4 first.
 
 The first time the TV sits on Home for a while, it asks **"Allow USB debugging?"** once more, for TV Kat
 Rumah itself: that connection clears the app caches every 15 days and lets the TV go back to sleep after

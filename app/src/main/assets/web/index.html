@@ -61,6 +61,7 @@
   <div class="row" style="margin-top:12px">
     <button class="ghost" data-uji="zikir">Uji zikir</button>
     <button class="ghost" data-uji="azan">Uji azan</button>
+    <button class="ghost" data-uji="screensaver">Uji screensaver</button>
   </div>
 </section>
 
@@ -104,6 +105,14 @@
   <h2>Gambar latar Home &amp; screensaver</h2>
   <div class="grid" id="masjid"></div>
   <div class="row" style="margin-top:10px"><button class="ghost" data-pilih="masjid">+ Tambah gambar</button></div>
+</section>
+
+<section class="card">
+  <h2>Video screensaver</h2>
+  <p class="dim">Video MP4 dimainkan tanpa bunyi di belakang jam, waktu solat dan ayat, bergilir dan berulang. Bila ada video, ia menggantikan gambar latar dalam screensaver (Home masih guna gambar). Had 200 MB setiap video.</p>
+  <div id="screensaver"></div>
+  <div class="row" style="margin-top:10px"><button class="ghost" data-pilih="screensaver">+ Tambah video</button>
+    <button class="ghost" data-uji="screensaver">Uji screensaver</button></div>
 </section>
 
 <section class="card">
@@ -216,6 +225,8 @@ function drawFiles() {
   $("#azanBunyi").innerHTML = (F.azan_bunyi ? `<div class="item"><span class="grow">Azan</span><audio controls preload="none" src="${url("azan-bunyi", "azan.mp3")}"></audio></div>` : '<p class="dim">Tiada bunyi azan.</p>')
     + (F.azan_subuh ? `<div class="item"><span class="grow">Azan Subuh</span><audio controls preload="none" src="${url("azan-bunyi", "azan-subuh.mp3")}"></audio></div>` : "");
   $("#masjid").innerHTML = F.masjid.filter(f => f.endsWith(".jpg")).map(f => `<figure><img loading="lazy" src="${url("masjid", f)}"><button data-padam="masjid" data-nama="${esc(f)}">Padam</button></figure>`).join("") || '<p class="dim">Tiada gambar.</p>';
+  $("#screensaver").innerHTML = (F.screensaver || []).map(f => `<div class="item"><span class="grow">${esc(f)}</span>
+      <button class="danger" data-padam="screensaver" data-nama="${esc(f)}">Padam</button></div>`).join("") || '<p class="dim">Tiada video; screensaver guna gambar latar.</p>';
   const zf = {}; F.zikir.forEach(f => zf[f.slice(0, 2)] = f);
   $("#zikir").innerHTML = S.zikir.map(z => { const n = String(z.no).padStart(2, "0"), f = zf[n];
     return `<div class="item"><span class="grow"><b>${n}:00</b>${z.no == 24 ? " (tengah malam)" : ""} · ${esc(z.rumi)}</span>
@@ -238,8 +249,9 @@ document.addEventListener("click", async e => {
 function pick(jenis, nama) {
   const f = $("#file");
   const gambar = jenis === "masjid" || jenis === "azan-gambar" || jenis === "peringatan-gambar";
-  f.accept = gambar ? "image/*" : jenis === "surah" ? "audio/*,video/mp4,.mp3,.m4a,.mp4" : "audio/*,.mp3,.m4a";
-  f.multiple = jenis === "masjid";
+  f.accept = gambar ? "image/*" : jenis === "screensaver" ? "video/mp4,.mp4"
+    : jenis === "surah" ? "audio/*,video/mp4,.mp3,.m4a,.mp4" : "audio/*,.mp3,.m4a";
+  f.multiple = jenis === "masjid" || jenis === "screensaver";
   f.value = "";
   f.onchange = async () => {
     for (const [i, file] of [...f.files].entries()) {
