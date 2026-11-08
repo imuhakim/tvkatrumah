@@ -9,8 +9,10 @@ Kemudian, dengan TV_HOST ditetapkan kepada IP TV (atau --tv <ip>):
     python tools/pasang.py periksa            model TV, versi Android, sesuai atau tidak (baca sahaja)
     python tools/pasang.py backup             simpan keadaan TV dalam backup/ (baca sahaja)
     python tools/pasang.py pasang             pasang app dan jadikan Home (dengan perlindungan)
+        --matikan-launcher-asal               jika Home asal tetap menang (cth. Xiaomi), matikan ia (pulih menghidupkannya)
     python tools/pasang.py azan               muat turun audio azan (dari repo Clear TV Islamic) ke media/
     python tools/pasang.py tetapan --zon WLY01   hantar media/ (gambar, suara, tetapan) ke TV
+        Android 11 ke atas: dihantar melalui halaman tetapan TV; taip PIN yang keluar di TV
     python tools/pasang.py pulih              pulangkan Home dan screensaver asal (app tidak dibuang)
 
 Setiap arahan yang mengubah TV dicatat dalam backup/log.txt.
@@ -36,6 +38,7 @@ FILES = f"/sdcard/Android/data/{PKG}/files"
 APK = os.path.join(ROOT, "dist", "tv-kat-rumah.apk")
 MEDIA = os.path.join(ROOT, "media")
 BACKUP = os.path.join(ROOT, "backup")
+DISABLED = os.path.join(BACKUP, "launcher-dimatikan.txt")
 AZAN_URL = "https://raw.githubusercontent.com/Pokka99/cleartv-Islamic/main/themes/islamik/"
 HOME_QUERY = "cmd package resolve-activity --brief -c android.intent.category.HOME -a android.intent.action.MAIN"
 NOT_SUPPORTED = ("Amazon",)
@@ -157,8 +160,20 @@ def pasang(a):
             raise RuntimeError("app tidak berjalan dengan betul pada TV ini")
         sh(d, f"cmd package set-home-activity --user 0 {PKG}/.MainActivity")
         now = home(d)
+        if not now.startswith(PKG + "/") and "/" in now and a.matikan_launcher_asal:
+            # Some TVs (Xiaomi, Google TV) keep their own launcher above any default; switched off, not removed.
+            other = now.split("/")[0]
+            sh(d, f"pm disable-user --user 0 {other}")
+            os.makedirs(BACKUP, exist_ok=True)
+            with open(DISABLED, "a", encoding="utf-8") as f:
+                f.write(other + "\n")
+            log(f"pm disable-user {other} (undo: pm enable {other}; tools/pasang.py pulih)")
+            print("Launcher asal dimatikan (tidak dibuang):", other)
+            sh(d, f"cmd package set-home-activity --user 0 {PKG}/.MainActivity")
+            now = home(d)
         if not now.startswith(PKG + "/"):
-            raise RuntimeError(f"Home menghala ke {now}")
+            hint = "" if a.matikan_launcher_asal else " (cuba --matikan-launcher-asal, dengan izin pemilik TV)"
+            raise RuntimeError(f"Home menghala ke {now}{hint}")
         sh(d, "input keyevent KEYCODE_HOME")
         if not healthy(d):
             raise RuntimeError("butang Home tidak membuka TV Kat Rumah yang berfungsi")
@@ -168,6 +183,7 @@ def pasang(a):
             log(f"screensaver -> {PKG}/.ClockDream (undo: tools/pasang.py pulih)")
     except RuntimeError as e:
         print("RALAT:", e, "- memulangkan Home asal...")
+        enable_launchers(d)
         if "/" in orig and not orig.startswith(PKG):
             sh(d, f"cmd package set-home-activity --user 0 {orig}")
         sh(d, "input keyevent KEYCODE_HOME")
@@ -189,6 +205,17 @@ def azan(a):
         print(f"{f}: {os.path.getsize(out) // 1024} KB")
 
 
+def enable_launchers(d):
+    """Switches back on the launchers --matikan-launcher-asal switched off."""
+    if not os.path.isfile(DISABLED):
+        return
+    for p in sorted({x.strip() for x in open(DISABLED, encoding="utf-8") if x.strip()}):
+        sh(d, f"pm enable {p}")
+        print("Launcher asal dihidupkan semula:", p)
+        log(f"pm enable {p}")
+    os.remove(DISABLED)
+
+
 def tetapan(a):
     folder = os.path.abspath(a.folder or MEDIA)
     cfg_path = os.path.join(folder, "config.json")
@@ -202,9 +229,11 @@ def tetapan(a):
     # Android 11 and later keep the computer out of the app's folder (mkdir says nothing, writes fail):
     # send everything through the app's own settings page instead, with the PIN on the TV.
     if "boleh" not in sh(d, f"echo x > {FILES}/.tulis 2>/dev/null && rm {FILES}/.tulis && echo boleh"):
-        d.close()
         print("Android ini tidak membenarkan komputer menulis ke folder app; fail dihantar melalui halaman tetapan TV.")
-        return tetapan_web(os.environ["TV_HOST"], folder, cfg)
+        tetapan_web(os.environ["TV_HOST"].split(":")[0], folder, cfg)
+        restart(d)
+        d.close()
+        return
     tmp = os.path.join(BACKUP, "config-dihantar.json")
     os.makedirs(BACKUP, exist_ok=True)
     with open(tmp, "w", encoding="utf-8") as f:
@@ -239,11 +268,15 @@ def tetapan(a):
                 continue   # same size already there
             push(d, p, f"{FILES}/{sub}/{n}")
             print(f"{sub}/{n} dihantar")
-    # The settings screen sets the alarms again and fetches the prayer times; Home restarts with it all.
-    sh(d, f"am start -W -n {PKG}/.TetapanActivity; sleep 4; am force-stop {PKG}; input keyevent KEYCODE_HOME")
+    restart(d)
     log(f"tetapan dihantar dari {folder}")
     d.close()
     print("Siap. Tetapan dari telefon: buka http://<IP TV>:8080 di Wi-Fi rumah.")
+
+
+def restart(d):
+    """The settings screen sets the alarms again and fetches the prayer times; Home restarts with it all."""
+    sh(d, f"am start -W -n {PKG}/.TetapanActivity; sleep 4; am force-stop {PKG}; input keyevent KEYCODE_HOME")
 
 
 def tetapan_web(host, folder, cfg):
@@ -276,13 +309,21 @@ def tetapan_web(host, folder, cfg):
 
     call("/api/pin")
     print("PIN 4 angka kini keluar di penjuru kanan atas skrin TV (sah 2 minit).")
-    res = call("/api/masuk", urllib.parse.urlencode({"pin": input("Taip PIN itu: ").strip()}).encode(),
-               "application/x-www-form-urlencoded")
+    try:
+        pin = input("Taip PIN itu: ").strip() if sys.stdin and sys.stdin.isatty() else ""
+    except EOFError:
+        pin = ""
+    if not pin:
+        # The PIN is the person's to type (AGENTS.md, ground rule 4), so an AI running this stops here.
+        raise SystemExit("Perlu PIN dari skrin TV. Pemilik TV perlu menjalankan arahan ini sendiri di terminal "
+                         "mereka dan menaip PIN itu (AGENTS.md, langkah 7).")
+    res = call("/api/masuk", urllib.parse.urlencode({"pin": pin}).encode(), "application/x-www-form-urlencoded")
     if not res.get("ok"):
         raise SystemExit(f"Log masuk gagal: {res.get('ralat')}")
     res = call("/api/tetapan", json.dumps(cfg).encode(), "application/json")
     print(f"config.json (zon {cfg.get('prayer_zone')}): {'OK' if res.get('ok') else 'GAGAL: ' + str(res.get('ralat'))}")
     failed = 0 if res.get("ok") else 1
+    on_tv = call("/api/status").get("fail", {})
     for name, jenis in (("azan.jpg", "azan-gambar"), ("peringatan.jpg", "peringatan-gambar"),
                         ("azan.mp3", "azan-bunyi"), ("azan-subuh.mp3", "azan-bunyi")):
         p = os.path.join(folder, name)
@@ -292,8 +333,12 @@ def tetapan_web(host, folder, cfg):
                       ("surah", (".mp3", ".m4a", ".mp4"))):
         src = os.path.join(folder, sub)
         for n in sorted(os.listdir(src)) if os.path.isdir(src) else []:
-            if n.lower().endswith(exts):
-                failed += not upload(sub, os.path.join(src, n))
+            if not n.lower().endswith(exts):
+                continue
+            if sub == "surah" and n.lower() in on_tv.get("surah", []):
+                print(f"  {sub:18} {n:22}  sudah ada di TV (padam dari halaman telefon untuk menggantinya)")
+                continue
+            failed += not upload(sub, os.path.join(src, n))
     log(f"tetapan dihantar dari {folder} melalui halaman tetapan TV")
     if failed:
         raise SystemExit(f"{failed} fail gagal; jalankan sekali lagi untuk cuba semula.")
@@ -312,6 +357,7 @@ def pulih(a):
         print("Home dipulangkan kepada", orig)
     else:
         print("Tiada Home asal dalam backup/; pilih launcher di Tetapan TV, atau 'pm uninstall' app ini.")
+    enable_launchers(d)
     s = os.path.join(BACKUP, "screensaver-asal.txt")
     if os.path.isfile(s):
         comp = open(s, encoding="utf-8").read().strip()
@@ -332,6 +378,8 @@ def main():
     p = sub.add_parser("pasang")
     p.add_argument("--apk")
     p.add_argument("--tanpa-screensaver", action="store_true")
+    p.add_argument("--matikan-launcher-asal", action="store_true",
+                   help="matikan (bukan buang) launcher asal jika ia tetap menjadi Home; pulih menghidupkannya")
     z = sub.add_parser("azan")
     z.add_argument("--semula", action="store_true")
     t = sub.add_parser("tetapan")

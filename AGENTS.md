@@ -37,7 +37,8 @@ Tested so far on a Sony KD-55X7500F (BRAVIA 4K, Android 9). Tell the person this
 2. **Back up before changing anything** (`tools/pasang.py backup`). The backup and `backup/log.txt` stay
    on their computer (gitignored).
 3. **Never uninstall anything** unless the person asks for that exact app to be uninstalled. Making TV Kat
-   Rumah the Home screen does not disable or remove the TV's own launcher; `pulih` puts it back.
+   Rumah the Home screen does not disable or remove the TV's own launcher; `pulih` puts it back. The one
+   exception is `pasang --matikan-launcher-asal` (step 6), only after the person says yes.
 4. **Credentials stay with the person.** They type PINs, Wi-Fi passwords and API keys themselves, in their
    own terminal or on the TV. Never write a key into a file or ask for it in chat.
 5. **Downloads need a yes.** Say what, from where and how big before downloading: Python packages
@@ -113,6 +114,12 @@ screensaver at TV Kat Rumah (`--tanpa-screensaver` to leave it).
 **Check**: it ends with `Siap: TV Kat Rumah kini Home`. A line starting with `RALAT` means it stopped and
 restored the old Home.
 
+On some TVs (seen on a Xiaomi Mi TV with Android 11) `set-home-activity` says Success but the TV's own
+launcher, usually `com.google.android.tvlauncher`, still wins: `RALAT: Home menghala ke ...`. Then ask the
+person whether TV Kat Rumah may switch that launcher **off** (not uninstall it), and if they agree run
+`PY tools/pasang.py --tv <ip> pasang --matikan-launcher-asal`. It disables only the launcher that kept Home,
+notes it in `backup/launcher-dimatikan.txt`, and `pulih` (or a failed install) switches it back on.
+
 ### 7. Send the settings, pictures and voices
 
 `PY tools/pasang.py --tv <ip> tetapan --zon <ZONE>`
@@ -122,8 +129,10 @@ It sends `media/`: `config.json` with their zone, the mosque photos, the azan an
 
 **Android 11 and later** do not let the computer write into the app's folder. `tetapan` notices and sends
 everything through the app's own settings page instead: the TV shows a 4-digit PIN in its top right
-corner, and the person types it into the terminal (never you). Large files, the 75 MB Asmaul Husna video
-above all, take a few minutes over Wi-Fi.
+corner, and the person types it into the terminal (never you): ask them to run the command in their own
+terminal, from the repository folder; run by you, it stops with `Perlu PIN dari skrin TV`. Large files,
+the 75 MB Asmaul Husna video above all, take a few minutes over Wi-Fi; a reading already on the TV under
+the same name is not sent again.
 **Checks**, one at a time (ask before the ones that show or sound):
 - `PY tools/tv.py "logcat -d -s TvHome.Solat"` shows `saved 365 days for <ZONE>` (the TV needs internet).
 - A screenshot of Home shows the prayer row under the clock and a mosque behind the apps:
@@ -164,6 +173,8 @@ for the auto-sleep and cache cleaning; and where their backup is.
 
 - **Android shows a "choose a launcher" dialog right after the install**: two apps now claim Home; `pasang`
   sets TV Kat Rumah as the default. If it remains, press Home and pick TV Kat Rumah → Always.
+- **`tetapan` stops with `gagal menghantar`** (Android 11 and later): an older copy of `pasang.py`, without
+  the settings-page route; `git pull` and run it again.
 - **The zikir or azan does not show over YouTube**: `PY tools/tv.py "appops get com.rumahhakim.tv SYSTEM_ALERT_WINDOW"`
   must say `allow` (`pasang` sets it).
 - **No prayer times**: the zone is empty or wrong, or the TV has no internet; `logcat -d -s TvHome.Solat`

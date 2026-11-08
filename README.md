@@ -54,7 +54,8 @@ Yang penting ialah sistem TV, bukan jenamanya. Semak di **Settings → About**: 
 "Android TV OS" atau versi Android. Untuk TV yang tidak sesuai, **Google TV / Android TV box** (contohnya
 Chromecast with Google TV atau Xiaomi TV Stick) di port HDMI memberikan semua ciri ini.
 
-Sudah diuji: **Sony KD-55X7500F** (BRAVIA 4K, Android 9).
+Sudah diuji: **Sony KD-55X7500F** (BRAVIA 4K, Android 9) dan **Xiaomi Mi TV** (Android TV 11, dengan dua
+langkah tambahan di bawah).
 
 ## Pasang sendiri (tanpa AI)
 
@@ -77,6 +78,9 @@ Ringkasan; setiap langkah dan semakannya ada dalam [AGENTS.md](AGENTS.md).
    tools/venv/bin/python tools/pasang.py --tv 192.168.0.10 pasang      # pasang dan jadikan Home
    tools/venv/bin/python tools/pasang.py --tv 192.168.0.10 tetapan --zon WLY01
    ```
+   Android 11 ke atas: `tetapan` menghantar melalui halaman tetapan TV, dan meminta PIN yang keluar di TV.
+   Jika launcher asal tetap menjadi Home (contohnya Xiaomi), `pasang --matikan-launcher-asal` mematikannya
+   (tidak membuang); `pulih` menghidupkannya semula.
 4. Buka **http://192.168.0.10:8080** di telefon (Wi-Fi yang sama) dan tekan **"Tunjuk PIN di TV"**.
 
 Untuk memulangkan Home dan screensaver asal: `tools/pasang.py --tv <ip> pulih`.
@@ -88,7 +92,8 @@ masukkan PIN 4 digit yang keluar di skrin TV. Telefon itu kekal log masuk selepa
 
 - hidup/matikan zikir, azan dan TV hidup sendiri; julat jam zikir; zon solat; minit peringatan
 - jadual surah: jam, hari, nama, fail MP3, dan "zikir dahulu"
-- muat naik dari galeri: gambar azan, gambar peringatan, gambar latar Home, suara zikir, MP3 surah dan azan
+- muat naik dari galeri: gambar azan, gambar peringatan, gambar latar Home, suara zikir, MP3 atau video
+  (`.mp4`) bacaan, dan azan
 - butang **Uji zikir**, **Uji azan** dan **Uji surah**
 
 5 PIN salah mengunci halaman selama 5 minit; fail hanya boleh ditulis dalam folder app di TV.

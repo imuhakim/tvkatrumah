@@ -61,7 +61,7 @@ final class WebTetapan {
     /** The keys of config.json the page may change, and nothing else. */
     private static final Set<String> KEYS = new HashSet<>(Arrays.asList("zikir", "azan", "auto_hidup",
             "jam_mula", "jam_akhir", "jarak_solat_minit", "prayer_zone", "surah", "wallpaper_minutes",
-            "ambient_glow", "dock_apps", "peringatan_minit"));
+            "ambient_glow", "dock_apps", "peringatan_minit", "reduced_motion"));
 
     private static final SecureRandom RANDOM = new SecureRandom();
     private static volatile ServerSocket server;
